@@ -114,12 +114,11 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-If `COMMIT_PLANNING_DOCS=false`: Skip git operations
+If `COMMIT_PLANNING_DOCS=false`: Skip jj operations
 
 If `COMMIT_PLANNING_DOCS=true` (default):
 ```bash
-git add .planning/PROJECT.md .planning/STATE.md
-git commit -m "docs: start milestone v[X.Y] [Name]"
+jj describe -m "docs: start milestone v[X.Y] [Name]" && jj new
 ```
 
 ## Phase 6.5: Resolve Model Profile
@@ -508,13 +507,12 @@ Check planning config (same pattern as Phase 6).
 
 If committing:
 ```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs: define milestone v[X.Y] requirements
 
 [X] requirements across [N] categories
 EOF
-)"
+)" && jj new
 ```
 
 ## Phase 9: Create Roadmap
@@ -648,8 +646,7 @@ Check planning config (same pattern as Phase 6).
 
 If committing:
 ```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs: create milestone v[X.Y] roadmap ([N] phases)
 
 Phases:
@@ -659,7 +656,7 @@ Phases:
 
 All milestone requirements mapped to phases.
 EOF
-)"
+)" && jj new
 ```
 
 ## Phase 10: Done

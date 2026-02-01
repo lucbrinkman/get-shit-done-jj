@@ -47,13 +47,13 @@ This is the most leveraged moment in any project. Deep questioning here means be
    [ -f .planning/PROJECT.md ] && echo "ERROR: Project already initialized. Use /gsd:progress" && exit 1
    ```
 
-2. **Initialize git repo in THIS directory** (required even if inside a parent repo):
+2. **Initialize jj repo in THIS directory** (required even if inside a parent repo):
    ```bash
-   if [ -d .git ] || [ -f .git ]; then
-       echo "Git repo exists in current directory"
+   if [ -d .jj ]; then
+       echo "jj repo exists in current directory"
    else
-       git init
-       echo "Initialized new git repo"
+       jj git init
+       echo "Initialized new jj repo"
    fi
    ```
 
@@ -226,13 +226,12 @@ Do not compress. Capture everything gathered.
 
 ```bash
 mkdir -p .planning
-git add .planning/PROJECT.md
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs: initialize project
 
 [One-liner from PROJECT.md What This Is section]
 EOF
-)"
+)" && jj new
 ```
 
 ## Phase 5: Workflow Preferences
@@ -270,11 +269,11 @@ questions: [
     ]
   },
   {
-    header: "Git Tracking",
-    question: "Commit planning docs to git?",
+    header: "Version Control Tracking",
+    question: "Commit planning docs to version control?",
     multiSelect: false,
     options: [
-      { label: "Yes (Recommended)", description: "Planning docs tracked in version control" },
+      { label: "Yes (Recommended)", description: "Planning docs tracked in jj/version control" },
       { label: "No", description: "Keep .planning/ local-only (add to .gitignore)" }
     ]
   }
@@ -362,8 +361,7 @@ Create `.planning/config.json` with all settings:
 **Commit config.json:**
 
 ```bash
-git add .planning/config.json
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 chore: add project config
 
 Mode: [chosen mode]
@@ -371,7 +369,7 @@ Depth: [chosen depth]
 Parallelization: [enabled/disabled]
 Workflow agents: research=[on/off], plan_check=[on/off], verifier=[on/off]
 EOF
-)"
+)" && jj new
 ```
 
 **Note:** Run `/gsd:settings` anytime to update these preferences.
@@ -774,14 +772,13 @@ If "adjust": Return to scoping.
 **Commit requirements:**
 
 ```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs: define v1 requirements
 
 [X] requirements across [N] categories
 [Y] requirements deferred to v2
 EOF
-)"
+)" && jj new
 ```
 
 ## Phase 8: Create Roadmap
@@ -912,8 +909,7 @@ Use AskUserQuestion:
 **Commit roadmap (after approval):**
 
 ```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs: create roadmap ([N] phases)
 
 Phases:
@@ -923,7 +919,7 @@ Phases:
 
 All v1 requirements mapped to phases.
 EOF
-)"
+)" && jj new
 ```
 
 ## Phase 10: Done
@@ -986,7 +982,7 @@ Present completion with next steps:
 <success_criteria>
 
 - [ ] .planning/ directory created
-- [ ] Git repo initialized
+- [ ] jj repo initialized
 - [ ] Brownfield detection completed
 - [ ] Deep questioning completed (threads followed, not rushed)
 - [ ] PROJECT.md captures full context → **committed**

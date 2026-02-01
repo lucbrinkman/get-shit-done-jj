@@ -86,12 +86,12 @@ Phase: $ARGUMENTS
 6. **Commit any orchestrator corrections**
    Check for uncommitted changes before verification:
    ```bash
-   git status --porcelain
+   jj st
    ```
 
-   **If changes exist:** Orchestrator made corrections between executor completions. Commit them:
+   **If changes exist:** Orchestrator made corrections between executor completions. Review `jj st` to verify only intended files changed, then commit them:
    ```bash
-   git add -u && git commit -m "fix({phase}): orchestrator corrections"
+   jj describe -m "fix({phase}): orchestrator corrections" && jj new
    ```
 
    **If clean:** Continue to verification.
@@ -123,11 +123,11 @@ Phase: $ARGUMENTS
 
 10. **Commit phase completion**
     Check `COMMIT_PLANNING_DOCS` from config.json (default: true).
-    If false: Skip git operations for .planning/ files.
-    If true: Bundle all phase metadata updates in one commit:
-    - Stage: `git add .planning/ROADMAP.md .planning/STATE.md`
-    - Stage REQUIREMENTS.md if updated: `git add .planning/REQUIREMENTS.md`
-    - Commit: `docs({phase}): complete {phase-name} phase`
+    If false: Skip jj operations for .planning/ files.
+    If true: Review `jj st` to verify only intended planning files changed, then bundle all phase metadata updates:
+    ```bash
+    jj describe -m "docs({phase}): complete {phase-name} phase" && jj new
+    ```
 
 11. **Offer next steps**
     - Route to next action (see `<offer_next>`)
@@ -300,31 +300,39 @@ Only rule 4 requires user intervention.
 **Per-Task Commits:**
 
 After each task completes:
-1. Stage only files modified by that task
-2. Commit with format: `{type}({phase}-{plan}): {task-name}`
-3. Types: feat, fix, test, refactor, perf, chore
-4. Record commit hash for SUMMARY.md
+1. Review `jj st` to verify only intended files changed
+2. Use `jj restore <file>` to undo accidental modifications before `jj new`
+3. Commit with format: `{type}({phase}-{plan}): {task-name}`
+4. Types: feat, fix, test, refactor, perf, chore
+5. Record commit hash for SUMMARY.md
+   ```bash
+   jj describe -m "{type}({phase}-{plan}): {task-name}" && jj new
+   ```
 
 **Plan Metadata Commit:**
 
 After all tasks in a plan complete:
-1. Stage plan artifacts only: PLAN.md, SUMMARY.md
+1. Review `jj st` - ensure only plan artifacts changed: PLAN.md, SUMMARY.md
 2. Commit with format: `docs({phase}-{plan}): complete [plan-name] plan`
 3. NO code files (already committed per-task)
+   ```bash
+   jj describe -m "docs({phase}-{plan}): complete [plan-name] plan" && jj new
+   ```
 
 **Phase Completion Commit:**
 
 After all plans in phase complete (step 7):
-1. Stage: ROADMAP.md, STATE.md, REQUIREMENTS.md (if updated), VERIFICATION.md
+1. Review `jj st` - ensure only phase metadata changed: ROADMAP.md, STATE.md, REQUIREMENTS.md (if updated), VERIFICATION.md
 2. Commit with format: `docs({phase}): complete {phase-name} phase`
 3. Bundles all phase-level state updates in one commit
+   ```bash
+   jj describe -m "docs({phase}): complete {phase-name} phase" && jj new
+   ```
 
-**NEVER use:**
-- `git add .`
-- `git add -A`
-- `git add src/` or any broad directory
-
-**Always stage files individually.**
+**IMPORTANT:**
+- jj tracks files automatically - no staging area
+- Review `jj st` before `jj new` to verify only intended files changed
+- Use `jj restore <file>` to undo accidental modifications before `jj new`
 </commit_rules>
 
 <success_criteria>
