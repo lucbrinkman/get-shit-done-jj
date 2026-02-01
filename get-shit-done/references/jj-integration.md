@@ -1,12 +1,12 @@
 <overview>
-Git integration for GSD framework.
+JJ integration for GSD framework.
 </overview>
 
 <core_principle>
 
 **Commit outcomes, not process.**
 
-The git log should read like a changelog of what shipped, not a diary of planning activity.
+The jj log should read like a changelog of what shipped, not a diary of planning activity.
 </core_principle>
 
 <commit_points>
@@ -23,14 +23,14 @@ The git log should read like a changelog of what shipped, not a diary of plannin
 
 </commit_points>
 
-<git_check>
+<jj_check>
 
 ```bash
-[ -d .git ] && echo "GIT_EXISTS" || echo "NO_GIT"
+[ -d .jj ] && echo "JJ_EXISTS" || echo "NO_JJ"
 ```
 
-If NO_GIT: Run `git init` silently. GSD projects always get their own repo.
-</git_check>
+If NO_JJ: Run `jj git init` silently (non-colocated). GSD projects always get their own repo.
+</jj_check>
 
 <commit_formats>
 
@@ -48,10 +48,19 @@ Phases:
 3. [phase-name]: [goal]
 ```
 
-What to commit:
+How to commit:
 
 ```bash
-node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs: initialize [project-name] ([N] phases)" --files .planning/
+jj describe -m "docs: initialize [project-name] ([N] phases)
+
+[One-liner from PROJECT.md]
+
+Phases:
+1. [phase-name]: [goal]
+2. [phase-name]: [goal]
+3. [phase-name]: [goal]
+"
+jj new
 ```
 
 </format>
@@ -77,35 +86,43 @@ Each task gets its own commit immediately after completion.
 - `perf` - Performance improvement
 - `chore` - Dependencies, config, tooling
 
+**Before committing:**
+
+```bash
+jj st  # Review changes - verify only task-relevant files modified
+# If unwanted files changed:
+jj restore path/to/unwanted/file
+```
+
 **Examples:**
 
 ```bash
 # Standard task
-git add src/api/auth.ts src/types/user.ts
-git commit -m "feat(08-02): create user registration endpoint
+jj describe -m "feat(08-02): create user registration endpoint
 
 - POST /auth/register validates email and password
 - Checks for duplicate users
 - Returns JWT token on success
 "
+jj new
 
 # TDD task - RED phase
-git add src/__tests__/jwt.test.ts
-git commit -m "test(07-02): add failing test for JWT generation
+jj describe -m "test(07-02): add failing test for JWT generation
 
 - Tests token contains user ID claim
 - Tests token expires in 1 hour
 - Tests signature verification
 "
+jj new
 
 # TDD task - GREEN phase
-git add src/utils/jwt.ts
-git commit -m "feat(07-02): implement JWT generation
+jj describe -m "feat(07-02): implement JWT generation
 
 - Uses jose library for signing
 - Includes user ID and expiry claims
 - Signs with HS256 algorithm
 "
+jj new
 ```
 
 </format>
@@ -126,10 +143,20 @@ Tasks completed: [N]/[N]
 SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
 ```
 
-What to commit:
+How to commit:
 
 ```bash
-node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs({phase}-{plan}): complete [plan-name] plan" --files .planning/phases/XX-name/{phase}-{plan}-PLAN.md .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
+jj st  # Verify .planning/ files are the only changes
+jj describe -m "docs({phase}-{plan}): complete [plan-name] plan
+
+Tasks completed: [N]/[N]
+- [Task 1 name]
+- [Task 2 name]
+- [Task 3 name]
+
+SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
+"
+jj new
 ```
 
 **Note:** Code files NOT included - already committed per-task.
@@ -146,27 +173,49 @@ Current: [task name]
 [If blocked:] Blocked: [reason]
 ```
 
-What to commit:
+How to commit:
 
 ```bash
-node ~/.claude/get-shit-done/bin/gsd-tools.js commit "wip: [phase-name] paused at task [X]/[Y]" --files .planning/
+jj describe -m "wip: [phase-name] paused at task [X]/[Y]
+
+Current: [task name]
+Blocked: [reason]
+"
+jj new
 ```
 
 </format>
 </commit_formats>
 
+<safety_and_recovery>
+
+## Safety & Recovery with Operation Log
+
+jj tracks every operation. Unlike git's reflog, this is first-class and easy to use.
+
+```bash
+jj op log              # See all operations
+jj undo                # Undo last operation
+jj op restore <op-id>  # Restore to any previous state
+```
+
+**Before any destructive operation**, run `jj st`. This creates an operation log entry, making your current state recoverable with `jj undo`.
+
+**Recovery scenarios:**
+
+| Situation | How to fix |
+|-----------|------------|
+| Committed wrong files | `jj undo`, fix with `jj restore <file>`, `jj new` |
+| Messed up a rebase | `jj undo` or `jj op restore <op-id>` |
+| Accidentally ran `jj restore` | `jj undo` |
+| Want to see what changed | `jj diff` or `jj show @` |
+| Need to check history | `jj op log` shows what each operation did |
+
+</safety_and_recovery>
+
 <example_log>
 
-**Old approach (per-plan commits):**
-```
-a7f2d1 feat(checkout): Stripe payments with webhook verification
-3e9c4b feat(products): catalog with search, filters, and pagination
-8a1b2c feat(auth): JWT with refresh rotation using jose
-5c3d7e feat(foundation): Next.js 15 + Prisma + Tailwind scaffold
-2f4a8d docs: initialize ecommerce-app (5 phases)
-```
-
-**New approach (per-task commits):**
+**Example jj log (per-task commits):**
 ```
 # Phase 04 - Checkout
 1a2b3c docs(04-01): complete checkout flow plan
@@ -225,24 +274,40 @@ Each plan produces 2-4 commits (tasks + metadata). Clear, granular, bisectable.
 ## Why Per-Task Commits?
 
 **Context engineering for AI:**
-- Git history becomes primary context source for future Claude sessions
-- `git log --grep="{phase}-{plan}"` shows all work for a plan
-- `git diff <hash>^..<hash>` shows exact changes per task
+- JJ history becomes primary context source for future Claude sessions
+- `jj log -r 'description("{phase}-{plan}")'` shows all work for a plan
+- `jj show <change-id>` shows exact changes per task
 - Less reliance on parsing SUMMARY.md = more context for actual work
 
 **Failure recovery:**
-- Task 1 committed ✅, Task 2 failed ❌
+- Task 1 committed, Task 2 failed
 - Claude in next session: sees task 1 complete, can retry task 2
-- Can `git reset --hard` to last successful task
+- Can `jj undo` or `jj restore` to recover
 
 **Debugging:**
-- `git bisect` finds exact failing task, not just failing plan
-- `git blame` traces line to specific task context
-- Each commit is independently revertable
+- Each commit is independently viewable with `jj show`
+- `jj file annotate` traces line to specific task context
+- Each change is independently recoverable
 
 **Observability:**
 - Solo developer + Claude workflow benefits from granular attribution
-- Atomic commits are git best practice
+- Atomic commits are VCS best practice
 - "Commit noise" irrelevant when consumer is Claude, not humans
 
 </commit_strategy_rationale>
+
+<gh_cli_compatibility>
+
+## GitHub CLI Compatibility
+
+Since jj repos are non-colocated by default, the `gh` CLI won't find the git directory. Use this workaround:
+
+```bash
+# One-off command
+GIT_DIR=.jj/repo/store/git gh pr create --title "My PR"
+
+# Or add to .envrc for direnv users
+export GIT_DIR=$PWD/.jj/repo/store/git
+```
+
+</gh_cli_compatibility>
