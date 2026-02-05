@@ -988,13 +988,13 @@ INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js state load)
 
 **Commit the fix:**
 
-Stage and commit code changes (NEVER `git add -A` or `git add .`):
+Review `jj st` to verify only intended files changed, then commit:
 ```bash
-git add src/path/to/fixed-file.ts
-git add src/path/to/other-file.ts
-git commit -m "fix: {brief description}
+jj diff  # review changes
+jj describe -m "fix: {brief description}
 
 Root cause: {root_cause}"
+jj new
 ```
 
 Then commit planning docs via CLI (respects `commit_docs` config automatically):

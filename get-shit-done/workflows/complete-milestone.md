@@ -102,11 +102,11 @@ Wait for confirmation.
 Calculate milestone statistics:
 
 ```bash
-git log --oneline --grep="feat(" | head -20
-git diff --stat FIRST_COMMIT..LAST_COMMIT | tail -1
+jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep "feat(" | head -20
+jj diff --stat --from FIRST_CHANGE --to LAST_CHANGE
 find . -name "*.swift" -o -name "*.ts" -o -name "*.py" | xargs wc -l 2>/dev/null
-git log --format="%ai" FIRST_COMMIT | tail -1
-git log --format="%ai" LAST_COMMIT | head -1
+jj log --no-graph -r FIRST_CHANGE -T 'committer.timestamp() ++ "\n"'
+jj log --no-graph -r LAST_CHANGE -T 'committer.timestamp() ++ "\n"'
 ```
 
 Present:
@@ -119,7 +119,7 @@ Milestone Stats:
 - Files modified: [M]
 - Lines of code: [LOC] [language]
 - Timeline: [Days] days ([Start] → [End])
-- Git range: feat(XX-XX) → feat(YY-YY)
+- Change range: feat(XX-XX) → feat(YY-YY)
 ```
 
 </step>
@@ -152,7 +152,7 @@ Key accomplishments for this milestone:
 
 **Note:** MILESTONES.md entry is now created automatically by `gsd-tools milestone complete` in the archive_milestone step. The entry includes version, date, phase/plan/task counts, and accomplishments extracted from SUMMARY.md files.
 
-If additional details are needed (e.g., user-provided "Delivered" summary, git range, LOC stats), add them manually after the CLI creates the base entry.
+If additional details are needed (e.g., user-provided "Delivered" summary, change range, LOC stats), add them manually after the CLI creates the base entry.
 
 </step>
 
@@ -425,7 +425,7 @@ See: .planning/PROJECT.md (updated [today])
 
 </step>
 
-<step name="handle_branches">
+<step name="handle_bookmarks">
 
 Check branching strategy and offer merge options.
 
@@ -435,97 +435,73 @@ Use `init milestone-op` for context, or load config directly:
 INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js init execute-phase "1")
 ```
 
-Extract `branching_strategy`, `phase_branch_template`, `milestone_branch_template` from init JSON.
+Extract `branching_strategy`, `phase_bookmark_template`, `milestone_bookmark_template` from init JSON.
 
 **If "none":** Skip to git_tag.
 
 **For "phase" strategy:**
 
 ```bash
-BRANCH_PREFIX=$(echo "$PHASE_BRANCH_TEMPLATE" | sed 's/{.*//')
-PHASE_BRANCHES=$(git branch --list "${BRANCH_PREFIX}*" 2>/dev/null | sed 's/^\*//' | tr -d ' ')
+BOOKMARK_PREFIX=$(echo "$PHASE_BOOKMARK_TEMPLATE" | sed 's/{.*//')
+PHASE_BOOKMARKS=$(jj bookmark list | grep "^${BOOKMARK_PREFIX}" | awk '{print $1}')
 ```
 
 **For "milestone" strategy:**
 
 ```bash
-BRANCH_PREFIX=$(echo "$MILESTONE_BRANCH_TEMPLATE" | sed 's/{.*//')
-MILESTONE_BRANCH=$(git branch --list "${BRANCH_PREFIX}*" 2>/dev/null | sed 's/^\*//' | tr -d ' ' | head -1)
+BOOKMARK_PREFIX=$(echo "$MILESTONE_BOOKMARK_TEMPLATE" | sed 's/{.*//')
+MILESTONE_BOOKMARK=$(jj bookmark list | grep "^${BOOKMARK_PREFIX}" | awk '{print $1}' | head -1)
 ```
 
-**If no branches found:** Skip to git_tag.
+**If no bookmarks found:** Skip to git_tag.
 
-**If branches exist:**
+**If bookmarks exist:**
 
 ```
-## Git Branches Detected
+## Bookmarks Detected
 
 Branching strategy: {phase/milestone}
-Branches: {list}
+Bookmarks: {list}
 
 Options:
-1. **Merge to main** — Merge branch(es) to main
+1. **Squash to main** — Squash bookmark(s) to main
 2. **Delete without merging** — Already merged or not needed
-3. **Keep branches** — Leave for manual handling
+3. **Keep bookmarks** — Leave for manual handling
 ```
 
-AskUserQuestion with options: Squash merge (Recommended), Merge with history, Delete without merging, Keep branches.
+AskUserQuestion with options: Squash to main (Recommended), Delete without merging, Keep bookmarks.
 
-**Squash merge:**
+**Squash to main:**
 
 ```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
 if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    git merge --squash "$branch"
-    git commit -m "feat: $branch for v[X.Y]"
+  for bookmark in $PHASE_BOOKMARKS; do
+    jj squash --from "$bookmark" --into main
+    jj bookmark delete "$bookmark"
   done
 fi
 
 if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  git merge --squash "$MILESTONE_BRANCH"
-  git commit -m "feat: $MILESTONE_BRANCH for v[X.Y]"
+  jj squash --from "$MILESTONE_BOOKMARK" --into main
+  jj bookmark delete "$MILESTONE_BOOKMARK"
 fi
-
-git checkout "$CURRENT_BRANCH"
-```
-
-**Merge with history:**
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    git merge --no-ff "$branch" -m "Merge branch '$branch' for v[X.Y]"
-  done
-fi
-
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  git merge --no-ff "$MILESTONE_BRANCH" -m "Merge branch '$MILESTONE_BRANCH' for v[X.Y]"
-fi
-
-git checkout "$CURRENT_BRANCH"
 ```
 
 **Delete without merging:**
 
 ```bash
 if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
+  for bookmark in $PHASE_BOOKMARKS; do
+    jj bookmark delete "$bookmark"
   done
 fi
 
 if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  git branch -d "$MILESTONE_BRANCH" 2>/dev/null || git branch -D "$MILESTONE_BRANCH"
+  jj bookmark delete "$MILESTONE_BOOKMARK"
 fi
 ```
 
-**Keep branches:** Report "Branches preserved for manual handling"
+**Keep bookmarks:** Report "Bookmarks preserved for manual handling"
 
 </step>
 
@@ -534,26 +510,11 @@ fi
 Create git tag:
 
 ```bash
-git tag -a v[X.Y] -m "v[X.Y] [Name]
-
-Delivered: [One sentence]
-
-Key accomplishments:
-- [Item 1]
-- [Item 2]
-- [Item 3]
-
-See .planning/MILESTONES.md for full details."
+jj bookmark create v[X.Y]
+jj git push --bookmark v[X.Y]
 ```
 
-Confirm: "Tagged: v[X.Y]"
-
-Ask: "Push tag to remote? (y/n)"
-
-If yes:
-```bash
-git push origin v[X.Y]
-```
+Confirm: "Tagged and pushed: v[X.Y]"
 
 </step>
 
@@ -637,7 +598,7 @@ Milestone completion is successful when:
 - [ ] Requirements archive created (milestones/v[X.Y]-REQUIREMENTS.md)
 - [ ] REQUIREMENTS.md deleted (fresh for next milestone)
 - [ ] STATE.md updated with fresh project reference
-- [ ] Git tag created (v[X.Y])
+- [ ] Version bookmark created and pushed (v[X.Y])
 - [ ] Milestone commit made (includes archive files and deletion)
 - [ ] User knows next step (/gsd:new-milestone)
 

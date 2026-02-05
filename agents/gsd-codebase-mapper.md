@@ -747,7 +747,7 @@ Ready for orchestrator summary.
 
 **RETURN ONLY CONFIRMATION.** Your response should be ~10 lines max. Just confirm what was written.
 
-**DO NOT COMMIT.** The orchestrator handles git operations.
+**DO NOT COMMIT.** The orchestrator handles jj operations.
 
 </critical_rules>
 

@@ -439,7 +439,7 @@ Research is complete when:
 - [ ] Source hierarchy followed (Context7 → Official → WebSearch)
 - [ ] All findings have confidence levels
 - [ ] RESEARCH.md created in correct format
-- [ ] RESEARCH.md committed to git
+- [ ] RESEARCH.md committed
 - [ ] Structured return provided to orchestrator
 
 Quality indicators:

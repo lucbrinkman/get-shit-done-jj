@@ -19,7 +19,7 @@ Load all context in one call:
 INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js init execute-phase "${PHASE_ARG}")
 ```
 
-Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `parallelization`, `branching_strategy`, `branch_name`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `plans`, `incomplete_plans`, `plan_count`, `incomplete_count`, `state_exists`, `roadmap_exists`.
+Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `parallelization`, `branching_strategy`, `bookmark_name`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `plans`, `incomplete_plans`, `plan_count`, `incomplete_count`, `state_exists`, `roadmap_exists`.
 
 **If `phase_found` is false:** Error — phase directory not found.
 **If `plan_count` is 0:** Error — no plans found in phase.
@@ -31,14 +31,14 @@ When `parallelization` is false, plans within a wave execute sequentially.
 <step name="handle_branching">
 Check `branching_strategy` from init:
 
-**"none":** Skip, continue on current branch.
+**"none":** Skip, continue on current change.
 
-**"phase" or "milestone":** Use pre-computed `branch_name` from init:
+**"phase" or "milestone":** Use pre-computed `bookmark_name` from init:
 ```bash
-git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
+jj bookmark create "$BOOKMARK_NAME" 2>/dev/null || jj bookmark set "$BOOKMARK_NAME"
 ```
 
-All subsequent commits go to this branch. User handles merging.
+All subsequent commits go under this bookmark. User handles merging.
 </step>
 
 <step name="validate_phase">
@@ -139,7 +139,7 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
 
    For each SUMMARY.md:
    - Verify first 2 files from `key-files.created` exist on disk
-   - Check `git log --oneline --all --grep="{phase}-{plan}"` returns ≥1 commit
+   - Check `jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep "{phase}-{plan}"` returns ≥1 commit
    - Check for `## Self-Check: FAILED` marker
 
    If ANY spot-check fails: report which plan failed, route to failure handler — ask "Retry plan?" or "Continue with remaining waves?"
@@ -162,7 +162,7 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
 
 5. **Handle failures:**
 
-   **Known Claude Code bug (classifyHandoffIfNeeded):** If an agent reports "failed" with error containing `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a GSD or agent issue. The error fires in the completion handler AFTER all tool calls finish. In this case: run the same spot-checks as step 4 (SUMMARY.md exists, git commits present, no Self-Check: FAILED). If spot-checks PASS → treat as **successful**. If spot-checks FAIL → treat as real failure below.
+   **Known Claude Code bug (classifyHandoffIfNeeded):** If an agent reports "failed" with error containing `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a GSD or agent issue. The error fires in the completion handler AFTER all tool calls finish. In this case: run the same spot-checks as step 4 (SUMMARY.md exists, commits present, no Self-Check: FAILED). If spot-checks PASS → treat as **successful**. If spot-checks FAIL → treat as real failure below.
 
    For real failures: report which plan failed → ask "Continue?" or "Stop?" → if continue, dependent plans may also fail. If stop, partial completion report.
 

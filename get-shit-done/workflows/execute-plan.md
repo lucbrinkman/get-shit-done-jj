@@ -6,7 +6,7 @@ Execute a phase prompt (PLAN.md) and create the outcome summary (SUMMARY.md).
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
-@~/.claude/get-shit-done/references/git-integration.md
+@~/.claude/get-shit-done/references/jj-integration.md
 </required_reading>
 
 <process>
@@ -109,7 +109,7 @@ Pattern B only (verify-only checkpoints). Skip for A/C.
    - Main route: execute tasks using standard flow (step name="execute")
 3. After ALL segments: aggregate files/deviations/decisions → create SUMMARY.md → commit → self-check:
    - Verify key-files.created exist on disk with `[ -f ]`
-   - Check `git log --oneline --all --grep="{phase}-{plan}"` returns ≥1 commit
+   - Check `jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep "{phase}-{plan}"` returns ≥1 commit
    - Append `## Self-Check: PASSED` or `## Self-Check: FAILED` to SUMMARY
 
    **Known Claude Code bug (classifyHandoffIfNeeded):** If any segment agent reports "failed" with `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a real failure. Run spot-checks; if they pass, treat as successful.
@@ -233,13 +233,9 @@ See `~/.claude/get-shit-done/references/tdd.md` for structure.
 
 After each task (verification passed, done criteria met), commit immediately.
 
-**1. Check:** `git status --short`
+**1. Check:** `jj st`
 
-**2. Stage individually** (NEVER `git add .` or `git add -A`):
-```bash
-git add src/api/auth.ts
-git add src/types/user.ts
-```
+**2. Review changes** — Use `jj diff` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications.
 
 **3. Commit type:**
 
@@ -258,7 +254,9 @@ git add src/types/user.ts
 
 **5. Record hash:**
 ```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
+jj describe -m "{type}({phase}-{plan}): {description}"
+jj new
+TASK_COMMIT=$(jj log -r @- -T 'commit_id.short(7)' --no-graph)
 TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
 ```
 
@@ -394,8 +392,8 @@ node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs({phase}-{plan}): comp
 If .planning/codebase/ doesn't exist: skip.
 
 ```bash
-FIRST_TASK=$(git log --oneline --grep="feat({phase}-{plan}):" --grep="fix({phase}-{plan}):" --grep="test({phase}-{plan}):" --reverse | head -1 | cut -d' ' -f1)
-git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
+FIRST_TASK=$(jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep -E "(feat|fix|test)\({phase}-{plan}\):" | tail -1 | cut -d' ' -f1)
+jj diff --name-only --from "${FIRST_TASK}" --to @ 2>/dev/null
 ```
 
 Update only structural changes: new src/ dir → STRUCTURE.md | deps → STACK.md | file pattern → CONVENTIONS.md | API client → INTEGRATIONS.md | config → STACK.md | renamed → update paths. Skip code-only/bugfix/content changes.

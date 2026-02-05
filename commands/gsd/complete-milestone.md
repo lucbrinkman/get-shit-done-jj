@@ -70,8 +70,8 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 2. **Gather stats:**
 
    - Count phases, plans, tasks
-   - Calculate git range, file changes, LOC
-   - Extract timeline from git log
+   - Calculate change range, file changes, LOC
+   - Extract timeline from jj log
    - Present summary, confirm
 
 3. **Extract accomplishments:**
@@ -102,10 +102,10 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 
 7. **Commit and tag:**
 
-   - Stage: MILESTONES.md, PROJECT.md, ROADMAP.md, STATE.md, archive files
+   - Review `jj st` before committing
    - Commit: `chore: archive v{{version}} milestone`
-   - Tag: `git tag -a v{{version}} -m "[milestone summary]"`
-   - Ask about pushing tag
+   - Create new change: `jj new`
+   - Note: Tagging in jj is not yet implemented; use git tagging after `jj git push` if needed
 
 8. **Offer next steps:**
    - `/gsd:new-milestone` — start next milestone (questioning → research → requirements → roadmap)

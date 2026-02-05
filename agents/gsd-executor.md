@@ -217,7 +217,7 @@ Completed Tasks table gives continuation agent context. Commit hashes verify wor
 <continuation_handling>
 If spawned as continuation agent (`<completed_tasks>` in prompt):
 
-1. Verify previous commits exist: `git log --oneline -5`
+1. Verify previous commits exist: `jj log -n 5`
 2. DO NOT redo completed tasks
 3. Start from resume point in prompt
 4. Handle based on checkpoint type: after human-action → verify it worked; after human-verify → continue; after decision → implement selected option
@@ -241,13 +241,9 @@ When executing task with `tdd="true"`:
 <task_commit_protocol>
 After each task completes (verification passed, done criteria met), commit immediately.
 
-**1. Check modified files:** `git status --short`
+**1. Check modified files:** `jj st`
 
-**2. Stage task-related files individually** (NEVER `git add .` or `git add -A`):
-```bash
-git add src/api/auth.ts
-git add src/types/user.ts
-```
+**2. Review changes** — Use `jj diff` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications.
 
 **3. Commit type:**
 
@@ -261,14 +257,15 @@ git add src/types/user.ts
 
 **4. Commit:**
 ```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
+jj describe -m "{type}({phase}-{plan}): {concise task description}
 
 - {key change 1}
 - {key change 2}
 "
+jj new
 ```
 
-**5. Record hash:** `TASK_COMMIT=$(git rev-parse --short HEAD)` — track for SUMMARY.
+**5. Record hash:** `TASK_COMMIT=$(jj log -r @- -T 'commit_id.short(7)' --no-graph)` — track for SUMMARY.
 </task_commit_protocol>
 
 <summary_creation>
@@ -314,7 +311,7 @@ After writing SUMMARY.md, verify claims before proceeding.
 
 **2. Check commits exist:**
 ```bash
-git log --oneline --all | grep -q "{hash}" && echo "FOUND: {hash}" || echo "MISSING: {hash}"
+jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep -q "{hash}" && echo "FOUND: {hash}" || echo "MISSING: {hash}"
 ```
 
 **3. Append result to SUMMARY.md:** `## Self-Check: PASSED` or `## Self-Check: FAILED` with missing items listed.
