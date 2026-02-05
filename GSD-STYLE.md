@@ -305,8 +305,8 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 ### Rules
 
 - One commit per task during execution
-- Stage files individually (never `git add .`)
-- Capture hash for SUMMARY.md
+- Review `jj st` before `jj new` to verify only intended files changed
+- Capture change ID for SUMMARY.md
 - Include Co-Authored-By line
 
 ---
@@ -494,7 +494,7 @@ How to make tests pass
 7. **Context size as quality constraint** — split aggressively
 8. **Temporal language banned** — current state only
 9. **Plans ARE prompts** — executable, not documents
-10. **Atomic commits** — Git history as context source
+10. **Atomic commits** — jj history as context source
 11. **AskUserQuestion for all exploration** — always options
 12. **Checkpoints post-automation** — automate first, verify after
 13. **Deviation rules are automatic** — no permission for bugs/critical

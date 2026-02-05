@@ -254,16 +254,14 @@ Use Edit tool to make these changes atomically
 
 **Step 8: Final commit and completion**
 
-Stage and commit quick task artifacts:
+Review and commit quick task artifacts:
 
 ```bash
-# Stage quick task artifacts
-git add ${QUICK_DIR}/${next_num}-PLAN.md
-git add ${QUICK_DIR}/${next_num}-SUMMARY.md
-git add .planning/STATE.md
+# Review current state
+jj st
 
 # Commit with quick task format
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs(quick-${next_num}): ${DESCRIPTION}
 
 Quick task completed.
@@ -271,11 +269,14 @@ Quick task completed.
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
+
+# Create new change
+jj new
 ```
 
 Get final commit hash:
 ```bash
-commit_hash=$(git rev-parse --short HEAD)
+commit_hash=$(jj log -r @- --no-graph -T 'commit_id.short()')
 ```
 
 Display completion output:

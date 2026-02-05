@@ -123,29 +123,35 @@ If `.planning/STATE.md` exists:
 2. Update "### Pending Todos" under "## Accumulated Context"
 </step>
 
-<step name="git_commit">
+<step name="jj_commit">
 Commit the todo and any updated state:
 
 **Check planning config:**
 
 ```bash
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
+[ -d .jj ] || COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo saved (not committed - commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Todo saved (not committed - commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
+Review changes before committing:
+
 ```bash
-git add .planning/todos/pending/[filename]
-[ -f .planning/STATE.md ] && git add .planning/STATE.md
-git commit -m "$(cat <<'EOF'
+jj st
+```
+
+Then commit:
+
+```bash
+jj describe -m "$(cat <<'EOF'
 docs: capture todo - [title]
 
 Area: [area]
 EOF
-)"
+)" && jj new
 ```
 
 Confirm: "Committed: docs: capture todo - [title]"
@@ -189,5 +195,5 @@ Would you like to:
 - [ ] No duplicates (checked and resolved)
 - [ ] Area consistent with existing todos
 - [ ] STATE.md updated if exists
-- [ ] Todo and state committed to git
+- [ ] Todo and state committed to jj
 </success_criteria>

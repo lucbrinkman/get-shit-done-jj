@@ -13,7 +13,7 @@ allowed-tools:
 Remove an unstarted future phase from the roadmap and renumber all subsequent phases to maintain a clean, linear sequence.
 
 Purpose: Clean removal of work you've decided not to do, without polluting context with cancelled/deferred markers.
-Output: Phase deleted, all subsequent phases renumbered, git commit as historical record.
+Output: Phase deleted, all subsequent phases renumbered, jj commit as historical record.
 </objective>
 
 <execution_context>
@@ -231,7 +231,7 @@ Update STATE.md:
 2. **Recalculate progress percentage:**
    - New percentage based on completed plans / new total plans
 
-Do NOT add a "Roadmap Evolution" note - the git commit is the record.
+Do NOT add a "Roadmap Evolution" note - the jj commit is the record.
 
 Write updated STATE.md.
 </step>
@@ -250,22 +250,29 @@ Update any internal references to reflect new numbering.
 </step>
 
 <step name="commit">
-Stage and commit the removal:
+Commit the removal:
 
 **Check planning config:**
 
 ```bash
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
+[ -d .jj ] || COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
+Review changes before committing:
+
 ```bash
-git add .planning/
-git commit -m "chore: remove phase {target} ({original-phase-name})"
+jj st
+```
+
+Then commit:
+
+```bash
+jj describe -m "chore: remove phase {target} ({original-phase-name})" && jj new
 ```
 
 The commit message preserves the historical record of what was removed.
@@ -306,7 +313,7 @@ Would you like to:
 - Don't remove completed phases (have SUMMARY.md files)
 - Don't remove current or past phases
 - Don't leave gaps in numbering - always renumber
-- Don't add "removed phase" notes to STATE.md - git commit is the record
+- Don't add "removed phase" notes to STATE.md - jj commit is the record
 - Don't ask about each decimal phase - just renumber them
 - Don't modify completed phase directories
 </anti_patterns>

@@ -9,7 +9,7 @@ Display the complete GSD command reference.
 Output ONLY the reference content below. Do NOT add:
 
 - Project-specific analysis
-- Git status or file context
+- Jj status or file context
 - Next-step suggestions
 - Any commentary beyond the reference
   </objective>
@@ -165,7 +165,7 @@ Remove a future phase and renumber subsequent phases.
 - Deletes phase directory and all references
 - Renumbers all subsequent phases to close the gap
 - Only works on future (unstarted) phases
-- Git commit preserves historical record
+- Jj commit preserves historical record
 
 Usage: `/gsd:remove-phase 17`
 Result: Phase 17 deleted, phases 18-20 become 17-19
@@ -189,7 +189,7 @@ Archive completed milestone and prepare for next version.
 
 - Creates MILESTONES.md entry with stats
 - Archives full details to milestones/ directory
-- Creates git tag for the release
+- Creates jj bookmark for the release
 - Prepares workspace for next version
 
 Usage: `/gsd:complete-milestone 1.0.0`
@@ -399,13 +399,13 @@ Change anytime by editing `.planning/config.json`
 Configure how planning artifacts are managed in `.planning/config.json`:
 
 **`planning.commit_docs`** (default: `true`)
-- `true`: Planning artifacts committed to git (standard workflow)
+- `true`: Planning artifacts committed to jj (standard workflow)
 - `false`: Planning artifacts kept local-only, not committed
 
 When `commit_docs: false`:
 - Add `.planning/` to your `.gitignore`
 - Useful for OSS contributions, client projects, or keeping planning private
-- All planning files still work normally, just not tracked in git
+- All planning files still work normally, just not tracked in jj
 
 **`planning.search_gitignored`** (default: `false`)
 - `true`: Add `--no-ignore` to broad ripgrep searches

@@ -64,38 +64,38 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
+Store `COMMIT_PLANNING_DOCS` for use in jj operations.
 
-**Load git branching config:**
+**Load jj bookmark config:**
 
 ```bash
-# Get branching strategy (default: none)
-BRANCHING_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
+# Get bookmark strategy (default: none)
+BOOKMARK_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"bookmark_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
 
 # Get templates
-PHASE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"phase_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/phase-{phase}-{slug}")
-MILESTONE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"milestone_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/{milestone}-{slug}")
+PHASE_BOOKMARK_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"phase_bookmark_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/phase-{phase}-{slug}")
+MILESTONE_BOOKMARK_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"milestone_bookmark_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/{milestone}-{slug}")
 ```
 
-Store `BRANCHING_STRATEGY` and templates for use in branch creation step.
+Store `BOOKMARK_STRATEGY` and templates for use in bookmark creation step.
 </step>
 
-<step name="handle_branching">
-Create or switch to appropriate branch based on branching strategy.
+<step name="handle_bookmarks">
+Create or move to appropriate bookmark based on bookmark strategy.
 
 **Skip if strategy is "none":**
 
 ```bash
-if [ "$BRANCHING_STRATEGY" = "none" ]; then
-  # No branching, continue on current branch
+if [ "$BOOKMARK_STRATEGY" = "none" ]; then
+  # No bookmarks, continue on current change
   exit 0
 fi
 ```
 
-**For "phase" strategy — create phase branch:**
+**For "phase" strategy — create phase bookmark:**
 
 ```bash
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
+if [ "$BOOKMARK_STRATEGY" = "phase" ]; then
   # Get phase name from directory (e.g., "03-authentication" → "authentication")
   PHASE_NAME=$(basename "$PHASE_DIR" | sed 's/^[0-9]*-//')
 
@@ -103,19 +103,19 @@ if [ "$BRANCHING_STRATEGY" = "phase" ]; then
   PHASE_SLUG=$(echo "$PHASE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
 
   # Apply template
-  BRANCH_NAME=$(echo "$PHASE_BRANCH_TEMPLATE" | sed "s/{phase}/$PADDED_PHASE/g" | sed "s/{slug}/$PHASE_SLUG/g")
+  BOOKMARK_NAME=$(echo "$PHASE_BOOKMARK_TEMPLATE" | sed "s/{phase}/$PADDED_PHASE/g" | sed "s/{slug}/$PHASE_SLUG/g")
 
-  # Create or switch to branch
-  git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
+  # Create bookmark at current change
+  jj bookmark create "$BOOKMARK_NAME" 2>/dev/null || jj bookmark set "$BOOKMARK_NAME"
 
-  echo "Branch: $BRANCH_NAME (phase branching)"
+  echo "Bookmark: $BOOKMARK_NAME (phase bookmarking)"
 fi
 ```
 
-**For "milestone" strategy — create/switch to milestone branch:**
+**For "milestone" strategy — create/move to milestone bookmark:**
 
 ```bash
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
+if [ "$BOOKMARK_STRATEGY" = "milestone" ]; then
   # Get current milestone info from ROADMAP.md
   MILESTONE_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+' .planning/ROADMAP.md | head -1 || echo "v1.0")
   MILESTONE_NAME=$(grep -A1 "## .*$MILESTONE_VERSION" .planning/ROADMAP.md | tail -1 | sed 's/.*- //' | cut -d'(' -f1 | tr -d ' ' || echo "milestone")
@@ -124,22 +124,22 @@ if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
   MILESTONE_SLUG=$(echo "$MILESTONE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
 
   # Apply template
-  BRANCH_NAME=$(echo "$MILESTONE_BRANCH_TEMPLATE" | sed "s/{milestone}/$MILESTONE_VERSION/g" | sed "s/{slug}/$MILESTONE_SLUG/g")
+  BOOKMARK_NAME=$(echo "$MILESTONE_BOOKMARK_TEMPLATE" | sed "s/{milestone}/$MILESTONE_VERSION/g" | sed "s/{slug}/$MILESTONE_SLUG/g")
 
-  # Create or switch to branch (same branch for all phases in milestone)
-  git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
+  # Create or move bookmark (same bookmark for all phases in milestone)
+  jj bookmark create "$BOOKMARK_NAME" 2>/dev/null || jj bookmark set "$BOOKMARK_NAME"
 
-  echo "Branch: $BRANCH_NAME (milestone branching)"
+  echo "Bookmark: $BOOKMARK_NAME (milestone bookmarking)"
 fi
 ```
 
-**Report branch status:**
+**Report bookmark status:**
 
 ```
-Branching: {strategy} → {branch_name}
+Bookmarks: {strategy} → {bookmark_name}
 ```
 
-**Note:** All subsequent plan commits go to this branch. User handles merging based on their workflow.
+**Note:** All subsequent plan changes go to this bookmark. Bookmark must be manually moved with `jj bookmark set`. User handles merging/pushing based on their workflow.
 </step>
 
 <step name="validate_phase">
@@ -378,7 +378,7 @@ Plans with `autonomous: false` require user interaction.
    - Agent returns with structured checkpoint (see checkpoint-return.md template)
 
 3. **Agent return includes (structured format):**
-   - Completed Tasks table with commit hashes and files
+   - Completed Tasks table with change IDs and files
    - Current task name and blocker
    - Checkpoint type and details for user
    - What's awaited from user
@@ -421,7 +421,7 @@ Plans with `autonomous: false` require user interaction.
    - `{resume_instructions}`: Based on checkpoint type (see continuation-prompt.md)
 
 7. **Continuation agent executes:**
-   - Verifies previous commits exist
+   - Verifies previous changes exist
    - Continues from resume point
    - May hit another checkpoint (repeat from step 4)
    - Or completes plan
@@ -582,19 +582,17 @@ Update ROADMAP.md to reflect phase completion:
 **Check planning config:**
 
 If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
+- Skip all jj operations for .planning/ files
 - Planning docs exist locally but are gitignored
 - Log: "Skipping planning docs commit (commit_docs: false)"
 - Proceed to offer_next step
 
 If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
+- Continue with jj operations below
 
 Commit phase completion (roadmap, state, verification):
 ```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/phases/{phase_dir}/*-VERIFICATION.md
-git add .planning/REQUIREMENTS.md  # if updated
-git commit -m "docs(phase-{X}): complete phase execution"
+jj describe -m "docs(phase-{X}): complete phase execution" && jj new
 ```
 </step>
 

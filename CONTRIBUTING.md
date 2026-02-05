@@ -16,9 +16,9 @@ GSD optimizes for **solo developer + Claude workflow**. The release process foll
 
 ---
 
-## Branch Strategy
+## Bookmark Strategy
 
-Two branches. That's it.
+Simple linear workflow with bookmarks for tracking.
 
 ```
 main ════════════════════════════════════════════►
@@ -42,20 +42,19 @@ Production. Always installable via `npx get-shit-done-cc`.
 
 ### Feature Work
 
-Branch → PR → Merge. No `develop` branch. No release branches.
+New change → work → push. No `develop` bookmark. No release bookmarks.
 
 ```bash
 # Start work
-git checkout -b feat/model-profiles
-# or fix/windows-paths
-# or docs/checkpoint-examples
+jj new -m "feat: model profiles"
+# or "fix: windows paths"
+# or "docs: checkpoint examples"
 
-# Ship it
-git push origin feat/model-profiles
-# Open PR, get review, merge
+# Create bookmark and push
+jj git push -c @
 ```
 
-**Branch naming:**
+**Bookmark naming:**
 - `feat/description` — New capability
 - `fix/description` — Bug fix
 - `docs/description` — Documentation only
@@ -64,9 +63,9 @@ git push origin feat/model-profiles
 
 ---
 
-## When to Branch vs. Direct Commit
+## When to Use Bookmarks vs. Direct Commit
 
-**Use a branch when:**
+**Use a bookmark when:**
 - Adding new commands or workflows
 - Changing core behavior (orchestrator, context loading)
 - Touching multiple files
@@ -133,13 +132,13 @@ The codebase intelligence system added 3,065 lines and a 21MB dependency. It got
 
 ```bash
 # Experimental feature
-git tag -a v1.10.0-alpha.1 -m "Alpha: experimental codebase intelligence"
+jj bookmark create v1.10.0-alpha.1
 
 # After testing
-git tag -a v1.10.0-beta.1 -m "Beta: codebase intelligence stabilized"
+jj bookmark create v1.10.0-beta.1
 
 # Ready for production
-git tag -a v1.10.0 -m "Release: codebase intelligence"
+jj bookmark create v1.10.0
 ```
 
 Users opt-in: `npm install get-shit-done-cc@1.10.0-alpha.1`
@@ -155,12 +154,12 @@ npm version minor  # or patch, or major
 # Update CHANGELOG.md (already follows Keep a Changelog format)
 
 # Commit
-git add package.json CHANGELOG.md
-git commit -m "chore: release v1.10.0"
+jj describe -m "chore: release v1.10.0"
+jj new
 
-# Tag
-git tag -a v1.10.0 -m "Release v1.10.0"
-git push origin main --tags
+# Tag and push
+jj bookmark create v1.10.0
+jj git push
 
 # Publish
 npm publish
@@ -190,21 +189,20 @@ If a feature touches >500 lines or adds dependencies, use a branch and PR. This 
 Production broken? Skip the normal flow.
 
 ```bash
-# Branch from main
-git checkout main
-git checkout -b hotfix/1.9.4-windows-crash
+# Start from main
+jj new main
 
 # Fix it
 # ... make changes ...
 
 # Ship immediately
-git commit -m "fix(install): handle Windows UNC paths"
-git push origin hotfix/1.9.4-windows-crash
+jj describe -m "fix(install): handle Windows UNC paths"
+jj new
 
-# PR → merge → tag
+# Tag and push
 npm version patch
-git tag -a v1.9.5 -m "Hotfix: Windows UNC paths"
-git push origin main --tags
+jj bookmark create v1.9.5
+jj git push
 npm publish
 ```
 
@@ -267,7 +265,7 @@ Borrowed from GSD-STYLE.md:
 - "No longer"
 - "Instead of"
 
-Exception: CHANGELOG.md, MIGRATION.md, git commits
+Exception: CHANGELOG.md, MIGRATION.md, jj commit descriptions
 
 **Vague Contributions (Banned):**
 ```
@@ -288,13 +286,13 @@ Exception: CHANGELOG.md, MIGRATION.md, git commits
 
 | I want to... | Do this |
 |--------------|---------|
-| Add a feature | Branch `feat/x` → PR → merge |
-| Fix a bug | Branch `fix/x` → PR → merge |
-| Fix production NOW | Branch `hotfix/version-x` → PR → merge → tag |
+| Add a feature | `jj new` → work → `jj git push -c @` → PR → merge |
+| Fix a bug | `jj new` → work → `jj git push -c @` → PR → merge |
+| Fix production NOW | `jj new main` → fix → push → tag |
 | Release features | `npm version minor` → tag → publish |
 | Release fixes | Batch weekly, or `npm version patch` for critical |
-| Try experimental feature | Tag as `v1.X.0-alpha.1` |
-| Revert a mistake | `git revert` → PR → merge |
+| Try experimental feature | Bookmark as `v1.X.0-alpha.1` |
+| Revert a mistake | `jj undo` or `jj op restore` |
 
 ---
 
@@ -302,7 +300,7 @@ Exception: CHANGELOG.md, MIGRATION.md, git commits
 
 ```bash
 # Clone
-git clone https://github.com/glittercowboy/get-shit-done.git
+jj git clone https://github.com/glittercowboy/get-shit-done.git
 cd get-shit-done
 
 # Install

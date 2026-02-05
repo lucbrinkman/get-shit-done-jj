@@ -40,6 +40,12 @@ Options:
 
 **If .planning/ doesn't exist:** Error - project not initialized.
 
+**Check jj repo:**
+
+```bash
+[ -d .jj ] || echo "Error: Not a jj repository"
+```
+
 **Load planning config:**
 
 ```bash
@@ -49,7 +55,7 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
+Store `COMMIT_PLANNING_DOCS` for use in jj operations.
 </step>
 
 
@@ -487,7 +493,7 @@ If you were spawned as a continuation agent (your prompt has `<completed_tasks>`
 1. **Verify previous commits exist:**
 
    ```bash
-   git log --oneline -5
+   jj log -r ::@ -l 5
    ```
 
    Check that commit hashes from completed_tasks table appear
@@ -549,21 +555,15 @@ When executing a task with `tdd="true"` attribute, follow RED-GREEN-REFACTOR cyc
 <task_commit_protocol>
 After each task completes (verification passed, done criteria met), commit immediately.
 
-**1. Identify modified files:**
+**1. Review modified files:**
 
 ```bash
-git status --short
+jj st
 ```
 
-**2. Stage only task-related files:**
-Stage each file individually (NEVER use `git add .` or `git add -A`):
+Review `jj st` before `jj new` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications before `jj new`.
 
-```bash
-git add src/api/auth.ts
-git add src/types/user.ts
-```
-
-**3. Determine commit type:**
+**2. Determine commit type:**
 
 | Type       | When to Use                                     |
 | ---------- | ----------------------------------------------- |
@@ -576,23 +576,25 @@ git add src/types/user.ts
 | `style`    | Formatting, linting fixes                       |
 | `chore`    | Config, tooling, dependencies                   |
 
-**4. Craft commit message:**
+**3. Craft commit message and create new change:**
 
 Format: `{type}({phase}-{plan}): {task-name-or-description}`
 
 ```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
+jj describe -m "$(cat <<'EOF'
+{type}({phase}-{plan}): {concise task description}
 
 - {key change 1}
 - {key change 2}
 - {key change 3}
-"
+EOF
+)" && jj new
 ```
 
-**5. Record commit hash:**
+**4. Record commit hash:**
 
 ```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
+TASK_COMMIT=$(jj log -r @- --no-graph -T 'commit_id.short()')
 ```
 
 Track for SUMMARY.md generation.
@@ -600,9 +602,8 @@ Track for SUMMARY.md generation.
 **Atomic commit benefits:**
 
 - Each task independently revertable
-- Git bisect finds exact failing task
-- Git blame traces line to specific task context
 - Clear history for Claude in future sessions
+- Each change independently addressable by change ID
   </task_commit_protocol>
 
 <summary_creation>
@@ -719,28 +720,23 @@ Resume file: [path to .continue-here if exists, else "None"]
 <final_commit>
 After SUMMARY.md and STATE.md updates:
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations for planning files, log "Skipping planning docs commit (commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations for planning files, log "Skipping planning docs commit (commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
-**1. Stage execution artifacts:**
+**1. Describe and create new change for metadata:**
 
 ```bash
-git add .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-git add .planning/STATE.md
-```
-
-**2. Commit metadata:**
-
-```bash
-git commit -m "docs({phase}-{plan}): complete [plan-name] plan
+jj describe -m "$(cat <<'EOF'
+docs({phase}-{plan}): complete [plan-name] plan
 
 Tasks completed: [N]/[N]
 - [Task 1 name]
 - [Task 2 name]
 
 SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-"
+EOF
+)" && jj new
 ```
 
 This is separate from per-task commits. It captures execution results only.

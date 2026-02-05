@@ -123,18 +123,18 @@ Calculate milestone statistics:
 # Count phases and plans in milestone
 # (user specified or detected from roadmap)
 
-# Find git range
-git log --oneline --grep="feat(" | head -20
+# Find jj range
+jj log -r 'description(glob:"feat(*")' --limit 20 --no-graph -T 'change_id.short()'
 
 # Count files modified in range
-git diff --stat FIRST_COMMIT..LAST_COMMIT | tail -1
+jj diff --from FIRST_CHANGE --to LAST_CHANGE --stat | tail -1
 
 # Count LOC (adapt to language)
 find . -name "*.swift" -o -name "*.ts" -o -name "*.py" | xargs wc -l 2>/dev/null
 
 # Calculate timeline
-git log --format="%ai" FIRST_COMMIT | tail -1  # Start date
-git log --format="%ai" LAST_COMMIT | head -1   # End date
+jj log -r FIRST_CHANGE --no-graph -T 'committer_date'  # Start date
+jj log -r LAST_CHANGE --no-graph -T 'committer_date'   # End date
 ```
 
 Present summary:
@@ -211,7 +211,7 @@ Use template from `templates/milestone.md`:
 - [Phases] phases, [Plans] plans, [Tasks] tasks
 - [Days] days from [start milestone or start project] to ship
 
-**Git range:** `feat(XX-XX)` → `feat(YY-YY)`
+**Change range:** `feat(XX-XX)` → `feat(YY-YY)`
 
 **What's next:** [Ask user: what's the next goal?]
 
@@ -579,59 +579,58 @@ Progress: [updated progress bar]
 
 </step>
 
-<step name="handle_branches">
+<step name="handle_bookmarks">
 
-Check if branching was used and offer merge options.
+Check if bookmarks were used and offer options.
 
-**Check branching strategy:**
+**Check bookmark strategy:**
 
 ```bash
-# Get branching strategy from config
-BRANCHING_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
+# Get bookmark strategy from config
+BOOKMARK_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"bookmark_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
 ```
 
 **If strategy is "none":** Skip to git_tag step.
 
-**For "phase" strategy — find phase branches:**
+**For "phase" strategy — find phase bookmarks:**
 
 ```bash
-PHASE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"phase_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/phase-{phase}-{slug}")
+PHASE_BOOKMARK_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"phase_bookmark_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/phase-{phase}-{slug}")
 
 # Extract prefix from template (before first variable)
-BRANCH_PREFIX=$(echo "$PHASE_BRANCH_TEMPLATE" | sed 's/{.*//')
+BOOKMARK_PREFIX=$(echo "$PHASE_BOOKMARK_TEMPLATE" | sed 's/{.*//')
 
-# Find all phase branches for this milestone
-PHASE_BRANCHES=$(git branch --list "${BRANCH_PREFIX}*" 2>/dev/null | sed 's/^\*//' | tr -d ' ')
+# Find all phase bookmarks for this milestone
+PHASE_BOOKMARKS=$(jj bookmark list | grep "^${BOOKMARK_PREFIX}" | awk '{print $1}')
 ```
 
-**For "milestone" strategy — find milestone branch:**
+**For "milestone" strategy — find milestone bookmark:**
 
 ```bash
-MILESTONE_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"milestone_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/{milestone}-{slug}")
+MILESTONE_BOOKMARK_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"milestone_bookmark_template"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "gsd/{milestone}-{slug}")
 
 # Extract prefix from template
-BRANCH_PREFIX=$(echo "$MILESTONE_BRANCH_TEMPLATE" | sed 's/{.*//')
+BOOKMARK_PREFIX=$(echo "$MILESTONE_BOOKMARK_TEMPLATE" | sed 's/{.*//')
 
-# Find milestone branch
-MILESTONE_BRANCH=$(git branch --list "${BRANCH_PREFIX}*" 2>/dev/null | sed 's/^\*//' | tr -d ' ' | head -1)
+# Find milestone bookmark
+MILESTONE_BOOKMARK=$(jj bookmark list | grep "^${BOOKMARK_PREFIX}" | awk '{print $1}' | head -1)
 ```
 
-**If no branches found:** Skip to git_tag step.
+**If no bookmarks found:** Skip to git_tag step.
 
-**If branches exist — present merge options:**
+**If bookmarks exist — present options:**
 
 ```
-## Git Branches Detected
+## Bookmarks Detected
 
-Branching strategy: {phase/milestone}
+Bookmark strategy: {phase/milestone}
 
-Branches found:
-{list of branches}
+Bookmarks found:
+{list of bookmarks}
 
 Options:
-1. **Merge to main** — Merge branch(es) to main
-2. **Delete without merging** — Branches already merged or not needed
-3. **Keep branches** — Leave for manual handling
+1. **Delete bookmarks** — Work complete, bookmarks no longer needed
+2. **Keep bookmarks** — Leave for manual handling
 ```
 
 Use AskUserQuestion:
@@ -639,99 +638,62 @@ Use AskUserQuestion:
 ```
 AskUserQuestion([
   {
-    question: "How should branches be handled?",
-    header: "Branches",
+    question: "How should bookmarks be handled?",
+    header: "Bookmarks",
     multiSelect: false,
     options: [
-      { label: "Squash merge (Recommended)", description: "Squash all commits into one clean commit on main" },
-      { label: "Merge with history", description: "Preserve all individual commits (--no-ff)" },
-      { label: "Delete without merging", description: "Branches already merged or not needed" },
-      { label: "Keep branches", description: "Leave branches for manual handling later" }
+      { label: "Delete bookmarks", description: "Work complete, bookmarks no longer needed" },
+      { label: "Keep bookmarks", description: "Leave bookmarks for manual handling later" }
     ]
   }
 ])
 ```
 
-**If "Squash merge":**
+**If "Delete bookmarks":**
 
 ```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
-# For phase strategy - squash merge each phase branch
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    echo "Squash merging $branch..."
-    git merge --squash "$branch"
-    git commit -m "feat: $branch for v[X.Y]"
+if [ "$BOOKMARK_STRATEGY" = "phase" ]; then
+  for bookmark in $PHASE_BOOKMARKS; do
+    jj bookmark delete "$bookmark"
   done
 fi
 
-# For milestone strategy - squash merge milestone branch
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  echo "Squash merging $MILESTONE_BRANCH..."
-  git merge --squash "$MILESTONE_BRANCH"
-  git commit -m "feat: $MILESTONE_BRANCH for v[X.Y]"
-fi
-
-git checkout "$CURRENT_BRANCH"
-```
-
-Report: "Squash merged branches to main"
-
-**If "Merge with history":**
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
-# For phase strategy - merge each phase branch
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    echo "Merging $branch..."
-    git merge --no-ff "$branch" -m "Merge branch '$branch' for v[X.Y]"
-  done
-fi
-
-# For milestone strategy - merge milestone branch
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  echo "Merging $MILESTONE_BRANCH..."
-  git merge --no-ff "$MILESTONE_BRANCH" -m "Merge branch '$MILESTONE_BRANCH' for v[X.Y]"
-fi
-
-git checkout "$CURRENT_BRANCH"
-```
-
-Report: "Merged branches to main with full history"
-
-**If "Delete without merging":**
-
-```bash
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
-  done
-fi
-
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  git branch -d "$MILESTONE_BRANCH" 2>/dev/null || git branch -D "$MILESTONE_BRANCH"
+if [ "$BOOKMARK_STRATEGY" = "milestone" ]; then
+  jj bookmark delete "$MILESTONE_BOOKMARK"
 fi
 ```
 
-Report: "Deleted branches"
+Report: "Deleted bookmarks"
 
-**If "Keep branches":**
+**If "Keep bookmarks":**
 
-Report: "Branches preserved for manual handling"
+Report: "Bookmarks preserved for manual handling"
+
+**Note on jj workflow:**
+
+Unlike git branches, jj bookmarks don't require merging. All changes are already in the repository's change graph. Bookmarks are just pointers for tracking work-in-progress. Deleting bookmarks doesn't affect history.
 
 </step>
 
 <step name="git_tag">
 
-Create git tag for milestone:
+Create git tag for milestone (jj uses underlying git for tags):
 
 ```bash
-git tag -a v[X.Y] -m "$(cat <<'EOF'
+# Create tag in git repo (jj stores commits in .git)
+git -C .jj/repo/store/git tag -a v[X.Y] -m "$(cat <<'EOF'
+v[X.Y] [Name]
+
+Delivered: [One sentence]
+
+Key accomplishments:
+- [Item 1]
+- [Item 2]
+- [Item 3]
+
+See .planning/MILESTONES.md for full details.
+EOF
+)" || git tag -a v[X.Y] -m "$(cat <<'EOF'
 v[X.Y] [Name]
 
 Delivered: [One sentence]
@@ -753,12 +715,12 @@ Ask: "Push tag to remote? (y/n)"
 If yes:
 
 ```bash
-git push origin v[X.Y]
+jj git push --tag v[X.Y]
 ```
 
 </step>
 
-<step name="git_commit_milestone">
+<step name="jj_commit_milestone">
 
 Commit milestone completion including archive files and deletions.
 
@@ -769,26 +731,18 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
+Review changes and create new change:
+
 ```bash
-# Stage archive files (new)
-git add .planning/milestones/v[X.Y]-ROADMAP.md
-git add .planning/milestones/v[X.Y]-REQUIREMENTS.md
-git add .planning/milestones/v[X.Y]-MILESTONE-AUDIT.md 2>/dev/null || true
+# Review what changed
+jj st
 
-# Stage updated files
-git add .planning/MILESTONES.md
-git add .planning/PROJECT.md
-git add .planning/STATE.md
-
-# Stage deletions
-git add -u .planning/
-
-# Commit with descriptive message
-git commit -m "$(cat <<'EOF'
+# Describe the milestone completion change
+jj describe -m "$(cat <<'EOF'
 chore: complete v[X.Y] milestone
 
 Archived:
@@ -807,10 +761,10 @@ Updated:
 
 Tagged: v[X.Y]
 EOF
-)"
+)" && jj new
 ```
 
-Confirm: "Committed: chore: complete v[X.Y] milestone"
+Confirm: "Change created: chore: complete v[X.Y] milestone"
 
 </step>
 

@@ -953,13 +953,12 @@ After making edits, self-check:
 
 ### Step 6: Commit Revised Plans
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Skipping planning docs commit (commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
-git add .planning/phases/$PHASE-*/$PHASE-*-PLAN.md
-git commit -m "fix($PHASE): revise plans based on checker feedback"
+jj describe -m "fix($PHASE): revise plans based on checker feedback" && jj new
 ```
 
 ### Step 7: Return Revision Summary
@@ -1012,7 +1011,7 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
+Store `COMMIT_PLANNING_DOCS` for use in jj operations.
 </step>
 
 <step name="load_codebase_context">
@@ -1221,21 +1220,23 @@ Update ROADMAP.md to finalize phase placeholders created by add-phase or insert-
 4. Write updated ROADMAP.md
 </step>
 
-<step name="git_commit">
+<step name="jj_commit">
 Commit phase plan(s) and updated roadmap:
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Skipping planning docs commit (commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
-git add .planning/phases/$PHASE-*/$PHASE-*-PLAN.md .planning/ROADMAP.md
-git commit -m "docs($PHASE): create phase plan
+jj describe -m "$(cat <<'EOF'
+docs($PHASE): create phase plan
 
 Phase $PHASE: $PHASE_NAME
 - [N] plan(s) in [M] wave(s)
 - [X] parallel, [Y] sequential
-- Ready for execution"
+- Ready for execution
+EOF
+)" && jj new
 ```
 </step>
 

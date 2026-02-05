@@ -34,7 +34,7 @@ Parse current values (default to `true` if not present):
 - `workflow.plan_check` — spawn plan checker during plan-phase
 - `workflow.verifier` — spawn verifier during execute-phase
 - `model_profile` — which model each agent uses (default: `balanced`)
-- `git.branching_strategy` — branching approach (default: `"none"`)
+- `jj.bookmark_strategy` — bookmark approach (default: `"none"`)
 
 ## 3. Present Settings
 
@@ -80,13 +80,13 @@ AskUserQuestion([
     ]
   },
   {
-    question: "Git branching strategy?",
-    header: "Branching",
+    question: "Jj bookmark strategy?",
+    header: "Bookmarks",
     multiSelect: false,
     options: [
-      { label: "None (Recommended)", description: "Commit directly to current branch" },
-      { label: "Per Phase", description: "Create branch for each phase (gsd/phase-{N}-{name})" },
-      { label: "Per Milestone", description: "Create branch for entire milestone (gsd/{version}-{name})" }
+      { label: "None (Recommended)", description: "Commit directly without bookmarks" },
+      { label: "Per Phase", description: "Create bookmark for each phase (gsd/phase-{N}-{name})" },
+      { label: "Per Milestone", description: "Create bookmark for entire milestone (gsd/{version}-{name})" }
     ]
   }
 ])
@@ -107,8 +107,8 @@ Merge new settings into existing config.json:
     "plan_check": true/false,
     "verifier": true/false
   },
-  "git": {
-    "branching_strategy": "none" | "phase" | "milestone"
+  "jj": {
+    "bookmark_strategy": "none" | "phase" | "milestone"
   }
 }
 ```
@@ -130,7 +130,7 @@ Display:
 | Plan Researcher      | {On/Off} |
 | Plan Checker         | {On/Off} |
 | Execution Verifier   | {On/Off} |
-| Git Branching        | {None/Per Phase/Per Milestone} |
+| Jj Bookmarks         | {None/Per Phase/Per Milestone} |
 
 These settings apply to future /gsd:plan-phase and /gsd:execute-phase runs.
 
@@ -145,7 +145,7 @@ Quick commands:
 
 <success_criteria>
 - [ ] Current config read
-- [ ] User presented with 5 settings (profile + 3 workflow toggles + git branching)
-- [ ] Config updated with model_profile, workflow, and git sections
+- [ ] User presented with 5 settings (profile + 3 workflow toggles + jj bookmarks)
+- [ ] Config updated with model_profile, workflow, and jj sections
 - [ ] Changes confirmed to user
 </success_criteria>

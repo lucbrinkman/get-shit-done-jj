@@ -6,7 +6,7 @@ Execute a phase prompt (PLAN.md) and create the outcome summary (SUMMARY.md).
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
-@~/.claude/get-shit-done/references/git-integration.md
+@~/.claude/get-shit-done/references/jj-integration.md
 </required_reading>
 
 <process>
@@ -65,7 +65,7 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
+Store `COMMIT_PLANNING_DOCS` for use in jj operations.
 </step>
 
 <step name="identify_plan">
@@ -168,7 +168,7 @@ grep -n "type=\"checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
 **If NO checkpoints found:**
 
 - **Fully autonomous plan** - spawn single subagent for entire plan
-- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY, commits
+- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY, creates changes
 - Main context: Just orchestration (~5% usage)
 
 **If checkpoints found, parse into segments:**
@@ -233,7 +233,7 @@ No segmentation benefit - execute entirely in main
 
    Follow all deviation rules and authentication gate protocols from the plan.
 
-   When complete, report: plan name, tasks completed, SUMMARY path, commit hash."
+   When complete, report: plan name, tasks completed, SUMMARY path, change ID."
 
 3. After Task tool returns with agent_id:
 
@@ -452,10 +452,10 @@ For Pattern A (fully autonomous) and Pattern C (decision-dependent), skip this s
       - Include deviations from all segments
       - Note which segments were subagented
 
-   C. Commit:
-      - Stage all files from all segments
-      - Stage SUMMARY.md
-      - Commit with message following plan guidance
+   C. Create change:
+      - All files from all segments are automatically tracked by jj
+      - SUMMARY.md is automatically tracked by jj
+      - Describe and create change with message following plan guidance
       - Include note about segmented execution if relevant
 
    D. Report completion
@@ -566,7 +566,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    **If `type="auto"`:**
 
    **Before executing:** Check if task has `tdd="true"` attribute:
-   - If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic commits per stage
+   - If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic changes per stage
    - If no: Standard implementation
 
    - Work toward task completion
@@ -576,7 +576,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    - Run the verification
    - Confirm done criteria met
    - **Commit the task** (see `<task_commit>` below)
-   - Track task completion and commit hash for Summary documentation
+   - Track task completion and change ID for Summary documentation
    - Continue to next task
 
    **If `type="checkpoint:*"`:**
@@ -877,7 +877,7 @@ None - plan executed exactly as written.
 - **Fix:** Changed to `CREATE UNIQUE INDEX users_email_unique ON users (LOWER(email))`
 - **Files modified:** src/models/User.ts, migrations/003_fix_email_unique.sql
 - **Verification:** Unique constraint test passes - duplicate emails properly rejected
-- **Commit:** abc123f
+- **Change ID:** abc123f
 
 **2. [Rule 2 - Missing Critical] Added JWT expiry validation to auth middleware**
 
@@ -886,7 +886,7 @@ None - plan executed exactly as written.
 - **Fix:** Added exp claim validation in middleware, reject with 401 if expired
 - **Files modified:** src/middleware/auth.ts, src/middleware/auth.test.ts
 - **Verification:** Expired token test passes - properly rejects with 401
-- **Commit:** def456g
+- **Change ID:** def456g
 
 ---
 
@@ -922,21 +922,21 @@ If no test framework configured:
 - Create test file if doesn't exist (follow project conventions)
 - Write test(s) that describe expected behavior
 - Run tests - MUST fail (if passes, test is wrong or feature exists)
-- Commit: `test({phase}-{plan}): add failing test for [feature]`
+- Change: `jj describe -m "test({phase}-{plan}): add failing test for [feature]" && jj new`
 
 **3. GREEN - Implement to pass:**
 - Read `<implementation>` element for guidance
 - Write minimal code to make test pass
 - Run tests - MUST pass
-- Commit: `feat({phase}-{plan}): implement [feature]`
+- Change: `jj describe -m "feat({phase}-{plan}): implement [feature]" && jj new`
 
 **4. REFACTOR (if needed):**
 - Clean up code if obvious improvements
 - Run tests - MUST still pass
-- Commit only if changes made: `refactor({phase}-{plan}): clean up [feature]`
+- Change only if changes made: `jj describe -m "refactor({phase}-{plan}): clean up [feature]" && jj new`
 
-**Commit pattern for TDD plans:**
-Each TDD plan produces 2-3 atomic commits:
+**Change pattern for TDD plans:**
+Each TDD plan produces 2-3 atomic changes:
 1. `test({phase}-{plan}): add failing test for X`
 2. `feat({phase}-{plan}): implement X`
 3. `refactor({phase}-{plan}): clean up X` (optional)
@@ -955,8 +955,8 @@ After TDD plan completion, ensure:
 **Why TDD uses dedicated plans:** TDD requires 2-3 execution cycles (RED → GREEN → REFACTOR), each with file reads, test runs, and potential debugging. This consumes 40-50% of context for a single feature. Dedicated plans ensure full quality throughout the cycle.
 
 **Comparison:**
-- Standard plans: Multiple tasks, 1 commit per task, 2-4 commits total
-- TDD plans: Single feature, 2-3 commits for RED/GREEN/REFACTOR cycle
+- Standard plans: Multiple tasks, 1 change per task, 2-4 changes total
+- TDD plans: Single feature, 2-3 changes for RED/GREEN/REFACTOR cycle
 
 See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 </tdd_plan_execution>
@@ -971,18 +971,12 @@ After each task completes (verification passed, done criteria met), commit immed
 Track files changed during this specific task (not the entire plan):
 
 ```bash
-git status --short
+jj st
 ```
 
-**2. Stage only task-related files:**
+**2. Review changes before creating new change:**
 
-Stage each file individually (NEVER use `git add .` or `git add -A`):
-
-```bash
-# Example - adjust to actual files modified by this task
-git add src/api/auth.ts
-git add src/types/user.ts
-```
+Review `jj st` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications before `jj new`.
 
 **3. Determine commit type:**
 
@@ -1002,41 +996,47 @@ git add src/types/user.ts
 Format: `{type}({phase}-{plan}): {task-name-or-description}`
 
 ```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
+jj describe -m "$(cat <<'EOF'
+{type}({phase}-{plan}): {concise task description}
 
 - {key change 1}
 - {key change 2}
 - {key change 3}
-"
+EOF
+)" && jj new
 ```
 
 **Examples:**
 
 ```bash
 # Standard plan task
-git commit -m "feat(08-02): create user registration endpoint
+jj describe -m "$(cat <<'EOF'
+feat(08-02): create user registration endpoint
 
 - POST /auth/register validates email and password
 - Checks for duplicate users
 - Returns JWT token on success
-"
+EOF
+)" && jj new
 
 # Another standard task
-git commit -m "fix(08-02): correct email validation regex
+jj describe -m "$(cat <<'EOF'
+fix(08-02): correct email validation regex
 
 - Fixed regex to accept plus-addressing
 - Added tests for edge cases
-"
+EOF
+)" && jj new
 ```
 
-**Note:** TDD plans have their own commit pattern (test/feat/refactor for RED/GREEN/REFACTOR phases). See `<tdd_plan_execution>` section above.
+**Note:** TDD plans have their own change pattern (test/feat/refactor for RED/GREEN/REFACTOR phases). See `<tdd_plan_execution>` section above.
 
-**5. Record commit hash:**
+**5. Record change ID:**
 
-After committing, capture hash for SUMMARY.md:
+After creating new change, capture change ID for SUMMARY.md:
 
 ```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
+TASK_COMMIT=$(jj log -r @- --no-graph -T 'change_id.short()' | head -1)
 echo "Task ${TASK_NUM} committed: ${TASK_COMMIT}"
 ```
 
@@ -1138,7 +1138,7 @@ If you were spawned via Task tool and hit a checkpoint, you cannot directly inte
 
 **Required in your return:**
 
-1. **Completed Tasks table** - Tasks done so far with commit hashes and files created
+1. **Completed Tasks table** - Tasks done so far with change IDes and files created
 2. **Current Task** - Which task you're on and what's blocking it
 3. **Checkpoint Details** - User-facing content (verification steps, decision options, or action instructions)
 4. **Awaiting** - What you need from the user
@@ -1507,47 +1507,36 @@ ROADMAP_FILE=".planning/ROADMAP.md"
 - Add completion date
 </step>
 
-<step name="git_commit_metadata">
+<step name="jj_commit_metadata">
 Commit execution metadata (SUMMARY + STATE + ROADMAP):
 
-**Note:** All task code has already been committed during execution (one commit per task).
-PLAN.md was already committed during plan-phase. This final commit captures execution results only.
+**Note:** All task code has already been committed during execution (one change per task).
+PLAN.md was already committed during plan-phase. This final change captures execution results only.
 
 **Check planning config:**
 
 If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
+- Skip all jj operations for .planning/ files
 - Planning docs exist locally but are gitignored
 - Log: "Skipping planning docs commit (commit_docs: false)"
 - Proceed to next step
 
 If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
+- Continue with jj operations below
 
-**1. Stage execution artifacts:**
-
-```bash
-git add .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-git add .planning/STATE.md
-```
-
-**2. Stage roadmap:**
+**1. Review changes:**
 
 ```bash
-git add .planning/ROADMAP.md
-```
-
-**3. Verify staging:**
-
-```bash
-git status
+jj st
 # Should show only execution artifacts (SUMMARY, STATE, ROADMAP), no code files
 ```
 
-**4. Commit metadata:**
+Review `jj st` before `jj new` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications before `jj new`.
+
+**2. Describe metadata change:**
 
 ```bash
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs({phase}-{plan}): complete [plan-name] plan
 
 Tasks completed: [N]/[N]
@@ -1557,13 +1546,13 @@ Tasks completed: [N]/[N]
 
 SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
 EOF
-)"
+)" && jj new
 ```
 
 **Example:**
 
 ```bash
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs(08-02): complete user registration plan
 
 Tasks completed: 3/3
@@ -1573,34 +1562,35 @@ Tasks completed: 3/3
 
 SUMMARY: .planning/phases/08-user-auth/08-02-registration-SUMMARY.md
 EOF
-)"
+)" && jj new
 ```
 
-**Git log after plan execution:**
+**jj log after plan execution:**
 
 ```
-abc123f docs(08-02): complete user registration plan
-def456g feat(08-02): add email confirmation flow
-hij789k feat(08-02): implement password hashing with bcrypt
-lmn012o feat(08-02): create user registration endpoint
+@  pqrswxyz (empty) (no description set)
+○  abc123f docs(08-02): complete user registration plan
+○  def456g feat(08-02): add email confirmation flow
+○  hij789k feat(08-02): implement password hashing with bcrypt
+○  lmn012o feat(08-02): create user registration endpoint
 ```
 
-Each task has its own commit, followed by one metadata commit documenting plan completion.
+Each task has its own change, followed by one metadata change documenting plan completion.
 
-See `git-integration.md` (loaded via required_reading) for commit message conventions.
+See `jj-integration.md` (loaded via required_reading) for commit message conventions.
 </step>
 
 <step name="update_codebase_map">
 **If .planning/codebase/ exists:**
 
-Check what changed across all task commits in this plan:
+Check what changed across all task changes in this plan:
 
 ```bash
-# Find first task commit (right after previous plan's docs commit)
-FIRST_TASK=$(git log --oneline --grep="feat({phase}-{plan}):" --grep="fix({phase}-{plan}):" --grep="test({phase}-{plan}):" --reverse | head -1 | cut -d' ' -f1)
+# Find first task change (search by description pattern)
+FIRST_TASK=$(jj log -r 'description(glob:"feat({phase}-{plan}):*") | description(glob:"fix({phase}-{plan}):*") | description(glob:"test({phase}-{plan}):*")' --no-graph -T 'change_id.short()' | tail -1)
 
 # Get all changes from first task through now
-git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
+jj diff --from ${FIRST_TASK}~ --to @ --summary 2>/dev/null
 ```
 
 **Update only if structural changes occurred:**
@@ -1623,8 +1613,9 @@ git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
 Make single targeted edits - add a bullet point, update a path, or remove a stale entry. Don't rewrite sections.
 
 ```bash
-git add .planning/codebase/*.md
-git commit --amend --no-edit  # Include in metadata commit
+# Changes are automatically tracked by jj
+# Use jj squash to move codebase map updates into previous change if needed
+jj squash  # Squashes @ into @-
 ```
 
 **If .planning/codebase/ doesn't exist:**

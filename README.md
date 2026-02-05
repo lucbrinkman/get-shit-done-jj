@@ -137,7 +137,7 @@ claude --dangerously-skip-permissions
 ```
 
 > [!TIP]
-> This is how GSD is intended to be used — stopping to approve `date` and `git commit` 50 times defeats the purpose.
+> This is how GSD is intended to be used — stopping to approve `date` and `jj describe` 50 times defeats the purpose.
 
 <details>
 <summary><strong>Alternative: Granular Permissions</strong></summary>
@@ -159,12 +159,7 @@ If you prefer not to use that flag, add this to your project's `.claude/settings
       "Bash(sort:*)",
       "Bash(grep:*)",
       "Bash(tr:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git status:*)",
-      "Bash(git log:*)",
-      "Bash(git diff:*)",
-      "Bash(git tag:*)"
+      "Bash(jj:*)"
     ]
   }
 }
@@ -256,7 +251,7 @@ The system:
 3. **Commits per task** — Every task gets its own atomic commit
 4. **Verifies against goals** — Checks the codebase delivers what the phase promised
 
-Walk away, come back to completed work with clean git history.
+Walk away, come back to completed work with clean jj history.
 
 **Creates:** `{phase}-{N}-SUMMARY.md`, `{phase}-VERIFICATION.md`
 
@@ -388,7 +383,7 @@ The orchestrator never does heavy lifting. It spawns agents, waits, integrates r
 
 **The result:** You can run an entire phase — deep research, multiple plans created and verified, thousands of lines of code written across parallel executors, automated verification against goals — and your main context window stays at 30-40%. The work happens in fresh subagent contexts. Your session stays fast and responsive.
 
-### Atomic Git Commits
+### Atomic Commits
 
 Each task gets its own commit immediately after completion:
 
@@ -400,9 +395,9 @@ lmn012o feat(08-02): create registration endpoint
 ```
 
 > [!NOTE]
-> **Benefits:** Git bisect finds exact failing task. Each task independently revertable. Clear history for Claude in future sessions. Better observability in AI-automated workflow.
+> **Benefits:** Each change independently viewable with `jj show`. Each task independently recoverable with `jj undo`. Clear history for Claude in future sessions. Better observability in AI-automated workflow.
 
-Every commit is surgical, traceable, and meaningful.
+Every change is surgical, traceable, and meaningful.
 
 ### Modular by Design
 
@@ -524,24 +519,24 @@ Use `/gsd:settings` to toggle these, or override per-invocation:
 | Setting | Default | What it controls |
 |---------|---------|------------------|
 | `parallelization.enabled` | `true` | Run independent plans simultaneously |
-| `planning.commit_docs` | `true` | Track `.planning/` in git |
+| `planning.commit_docs` | `true` | Track `.planning/` in version control |
 
-### Git Branching
+### jj Bookmarks
 
-Control how GSD handles branches during execution.
+Control how GSD handles bookmarks during execution.
 
 | Setting | Options | Default | What it does |
 |---------|---------|---------|--------------|
-| `git.branching_strategy` | `none`, `phase`, `milestone` | `none` | Branch creation strategy |
-| `git.phase_branch_template` | string | `gsd/phase-{phase}-{slug}` | Template for phase branches |
-| `git.milestone_branch_template` | string | `gsd/{milestone}-{slug}` | Template for milestone branches |
+| `jj.bookmark_strategy` | `none`, `phase`, `milestone` | `none` | Bookmark creation strategy |
+| `jj.phase_bookmark_template` | string | `gsd/phase-{phase}-{slug}` | Template for phase bookmarks |
+| `jj.milestone_bookmark_template` | string | `gsd/{milestone}-{slug}` | Template for milestone bookmarks |
 
 **Strategies:**
-- **`none`** — Commits to current branch (default GSD behavior)
-- **`phase`** — Creates a branch per phase, merges at phase completion
-- **`milestone`** — Creates one branch for entire milestone, merges at completion
+- **`none`** — Commits to current change (default GSD behavior)
+- **`phase`** — Creates a bookmark per phase for tracking
+- **`milestone`** — Creates one bookmark for entire milestone
 
-At milestone completion, GSD offers squash merge (recommended) or merge with history.
+At milestone completion, GSD offers squash (recommended) or bookmark cleanup.
 
 ---
 

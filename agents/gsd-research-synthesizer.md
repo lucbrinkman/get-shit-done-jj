@@ -130,13 +130,13 @@ Write to `.planning/research/SUMMARY.md`
 
 The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Skipping planning docs commit (commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
-git add .planning/research/
-git commit -m "docs: complete project research
+jj describe -m "$(cat <<'EOF'
+docs: complete project research
 
 Files:
 - STACK.md
@@ -148,7 +148,9 @@ Files:
 Key findings:
 - Stack: [one-liner]
 - Architecture: [one-liner]
-- Critical pitfall: [one-liner]"
+- Critical pitfall: [one-liner]
+EOF
+)" && jj new
 ```
 
 ## Step 8: Return Summary
@@ -243,7 +245,7 @@ Synthesis is complete when:
 - [ ] Confidence assessed honestly
 - [ ] Gaps identified for later attention
 - [ ] SUMMARY.md follows template format
-- [ ] File committed to git
+- [ ] File committed to jj
 - [ ] Structured return provided to orchestrator
 
 Quality indicators:

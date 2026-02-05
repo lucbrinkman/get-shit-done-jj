@@ -531,18 +531,20 @@ Where `PHASE_DIR` is the full path (e.g., `.planning/phases/01-foundation`)
 
 ## Step 6: Commit Research
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Skipping planning docs commit (commit_docs: false)"
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
-git add "$PHASE_DIR/$PADDED_PHASE-RESEARCH.md"
-git commit -m "docs($PHASE): research phase domain
+jj describe -m "$(cat <<'EOF'
+docs($PHASE): research phase domain
 
 Phase $PHASE: $PHASE_NAME
 - Standard stack identified
 - Architecture patterns documented
-- Pitfalls catalogued"
+- Pitfalls catalogued
+EOF
+)" && jj new
 ```
 
 ## Step 7: Return Structured Result
@@ -627,7 +629,7 @@ Research is complete when:
 - [ ] Source hierarchy followed (Context7 → Official → WebSearch)
 - [ ] All findings have confidence levels
 - [ ] RESEARCH.md created in correct format
-- [ ] RESEARCH.md committed to git
+- [ ] RESEARCH.md committed to jj
 - [ ] Structured return provided to orchestrator
 
 Research quality indicators:

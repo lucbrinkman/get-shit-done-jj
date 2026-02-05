@@ -383,19 +383,19 @@ app.use(bodyParser.json({ limit: '50mb' })); // Uncomment, test → BREAKS
 // FOUND: Body size limit too high causes memory issues
 ```
 
-## Git Bisect
+## jj Bisect
 
 **When:** Feature worked in past, broke at unknown commit.
 
-**How:** Binary search through git history.
+**How:** Binary search through jj history.
 
 ```bash
-git bisect start
-git bisect bad              # Current commit is broken
-git bisect good abc123      # This commit worked
-# Git checks out middle commit
-git bisect bad              # or good, based on testing
-# Repeat until culprit found
+# Find the range of commits to bisect
+jj log -r 'good_commit::bad_commit'
+# Manually test commits by checking them out
+jj edit <commit-id>
+# Test if bug exists
+# Repeat, narrowing down the range
 ```
 
 100 commits between working and broken: ~7 tests to find exact breaking commit.
@@ -408,7 +408,7 @@ git bisect bad              # or good, based on testing
 | Confused about what's happening | Rubber duck, Observability first |
 | Complex system, many interactions | Minimal reproduction |
 | Know the desired output | Working backwards |
-| Used to work, now doesn't | Differential debugging, Git bisect |
+| Used to work, now doesn't | Differential debugging, jj bisect |
 | Many possible causes | Comment out everything, Binary search |
 | Always | Observability first (before making changes) |
 
@@ -988,23 +988,32 @@ git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 
 **Commit the fix:**
 
+Review changes before creating new change:
+```bash
+jj st
+```
+
 If `COMMIT_PLANNING_DOCS=true` (default):
 ```bash
-git add -A
-git commit -m "fix: {brief description}
+jj describe -m "$(cat <<'EOF'
+fix: {brief description}
 
 Root cause: {root_cause}
-Debug session: .planning/debug/resolved/{slug}.md"
+Debug session: .planning/debug/resolved/{slug}.md
+EOF
+)" && jj new
 ```
 
 If `COMMIT_PLANNING_DOCS=false`:
 ```bash
-# Only commit code changes, exclude .planning/
-git add -A
-git reset .planning/
-git commit -m "fix: {brief description}
+# Use jj restore to exclude .planning/ before creating change
+jj restore .planning/
+jj describe -m "$(cat <<'EOF'
+fix: {brief description}
 
-Root cause: {root_cause}"
+Root cause: {root_cause}
+EOF
+)" && jj new
 ```
 
 Report completion and offer next steps.

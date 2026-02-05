@@ -311,14 +311,13 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 Commit the UAT file:
 ```bash
-git add ".planning/phases/XX-name/{phase}-UAT.md"
-git commit -m "test({phase}): complete UAT - {passed} passed, {issues} issues"
+jj describe -m "test({phase}): complete UAT - {passed} passed, {issues} issues" && jj new
 ```
 
 Present summary:

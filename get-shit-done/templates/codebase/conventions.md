@@ -228,7 +228,7 @@ Template for `.planning/codebase/CONVENTIONS.md` - captures coding style and pat
 - Use @param, @returns, @throws tags
 
 **TODO Comments:**
-- Format: // TODO: description (no username, using git blame)
+- Format: // TODO: description (no username, using jj file annotate)
 - Link to issue if exists: // TODO: Fix race condition (issue #123)
 
 ## Function Design

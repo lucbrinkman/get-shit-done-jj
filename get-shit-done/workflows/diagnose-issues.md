@@ -163,14 +163,13 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 Commit the updated UAT.md:
 ```bash
-git add ".planning/phases/XX-name/{phase}-UAT.md"
-git commit -m "docs({phase}): add root causes from diagnosis"
+jj describe -m "docs({phase}): add root causes from diagnosis" && jj new
 ```
 </step>
 

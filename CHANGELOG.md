@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Migrated from git to jj (Jujutsu) as the version control system
+- Replaced all git commands with jj equivalents across all commands, agents, workflows, and templates
+- Removed staging area instructions (jj has no staging — working copy is always committed)
+- Renamed `git-integration.md` to `jj-integration.md`
+- Git branching strategy → jj bookmark strategy in planning config and README
+- `git add` + `git commit` → `jj describe` + `jj new` throughout
+
+### Added
+- jj operation log documentation for safety and recovery
+- `gh` CLI compatibility instructions for non-colocated repos
+- `jj restore <file>` guidance for undoing accidental modifications
+
+### Removed
+- All `git add` / staging instructions (not applicable in jj)
+- "NEVER use `git add .`" warnings (replaced with `jj st` review)
+- Redundant `jj.md` file (content in CLAUDE.md and jj-integration.md)
+
 ## [1.11.1] - 2026-01-31
 
 ### Added

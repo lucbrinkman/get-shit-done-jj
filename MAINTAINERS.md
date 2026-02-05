@@ -31,7 +31,7 @@ For risky features, ship as alpha first:
 npm version prerelease --preid=alpha
 
 # Push
-git push origin main --tags
+jj git push
 ```
 
 Pre-release tags (`v1.10.0-alpha.0`) don't trigger npm publish or GitHub Release creation. Users opt-in explicitly.
@@ -39,7 +39,7 @@ Pre-release tags (`v1.10.0-alpha.0`) don't trigger npm publish or GitHub Release
 If it works, promote to stable:
 ```bash
 npm version minor  # or patch
-git push origin main --tags
+jj git push
 ```
 
 If it fails, delete the tag and move on.
@@ -50,11 +50,12 @@ Production broken? Skip changelog ceremony:
 
 ```bash
 # Fix the issue
-git add . && git commit -m "fix(install): handle Windows UNC paths"
+jj describe -m "fix(install): handle Windows UNC paths"
+jj new
 
 # Bump and push
 npm version patch
-git push origin main --tags
+jj git push
 ```
 
 ## Version Cadence
@@ -108,13 +109,10 @@ After 72 hours: Publish a fix as new patch version.
 ### Wrong Tag
 
 ```bash
-# Delete local and remote
-git tag -d v1.9.5
-git push origin :refs/tags/v1.9.5
-
-# Recreate correctly
-git tag -a v1.9.5 -m "Release v1.9.5"
-git push origin v1.9.5
+# Delete and recreate bookmark
+jj bookmark delete v1.9.5
+jj bookmark create v1.9.5
+jj git push
 ```
 
 ### Missing Changelog Entry

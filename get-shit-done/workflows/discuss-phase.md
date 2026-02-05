@@ -400,20 +400,19 @@ COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
+**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
 
 **If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
-git add "${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md"
-git commit -m "$(cat <<'EOF'
+jj describe -m "$(cat <<'EOF'
 docs(${PADDED_PHASE}): capture phase context
 
 Phase ${PADDED_PHASE}: ${PHASE_NAME}
 - Implementation decisions documented
 - Phase boundary established
 EOF
-)"
+)" && jj new
 ```
 
 Confirm: "Committed: docs(${PADDED_PHASE}): capture phase context"
