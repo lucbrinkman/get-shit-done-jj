@@ -161,11 +161,12 @@ Apply these rules automatically. Track all deviations for Summary documentation.
 
 **Process:**
 
-1. Fix the bug inline
-2. Add/update tests to prevent regression
-3. Verify fix works
-4. Continue task
-5. Track in deviations list: `[Rule 1 - Bug] [description]`
+1. Write a failing test that reproduces the bug (unit+1 style)
+2. Verify the test fails with an assertion failure (not a runtime error)
+3. Fix the bug
+4. Verify the test passes
+5. Continue task
+6. Track in deviations list: `[Rule 1 - Bug] [description]`
 
 **No user permission needed.** Bugs must be fixed for correct operation.
 
@@ -191,11 +192,12 @@ Apply these rules automatically. Track all deviations for Summary documentation.
 
 **Process:**
 
-1. Add the missing functionality inline
-2. Add tests for the new functionality
-3. Verify it works
-4. Continue task
-5. Track in deviations list: `[Rule 2 - Missing Critical] [description]`
+1. Write a failing test describing the expected behavior (unit+1 style)
+2. Verify the test fails with an assertion failure (not a runtime error)
+3. Add the missing functionality
+4. Verify the test passes
+5. Continue task
+6. Track in deviations list: `[Rule 2 - Missing Critical] [description]`
 
 **Critical = required for correct/secure/performant operation**
 **No user permission needed.** These are not "features" - they're requirements for basic correctness.
