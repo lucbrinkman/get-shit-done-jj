@@ -253,7 +253,7 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 
 **DO:** Describe current state only
 
-**Exception:** CHANGELOG.md, MIGRATION.md, git commits
+**Exception:** CHANGELOG.md, MIGRATION.md, jj commits
 
 ### Generic XML (Banned)
 

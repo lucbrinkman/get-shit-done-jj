@@ -48,11 +48,6 @@ cat .planning/research/STACK.md
 cat .planning/research/FEATURES.md
 cat .planning/research/ARCHITECTURE.md
 cat .planning/research/PITFALLS.md
-
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
 Parse each file to extract:
@@ -129,10 +124,6 @@ Write to `.planning/research/SUMMARY.md`
 ## Step 7: Commit All Research
 
 The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
 
 ```bash
 jj describe -m "$(cat <<'EOF'

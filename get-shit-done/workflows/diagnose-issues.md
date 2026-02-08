@@ -156,17 +156,6 @@ For each gap in the Gaps section, add artifacts and missing fields:
 
 Update status in frontmatter to "diagnosed".
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 Commit the updated UAT.md:
 ```bash
 jj describe -m "docs({phase}): add root causes from diagnosis" && jj new
@@ -215,7 +204,7 @@ Agents only diagnose—plan-phase --gaps handles fixes (no fix application).
 - Can resume with /gsd:debug
 
 **All agents fail:**
-- Something systemic (permissions, git, etc.)
+- Something systemic (permissions, jj, etc.)
 - Report for manual investigation
 - Fall back to plan-phase --gaps without root causes (less precise)
 </failure_handling>

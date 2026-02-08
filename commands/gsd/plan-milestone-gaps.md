@@ -158,17 +158,6 @@ mkdir -p ".planning/phases/{NN}-{name}"
 
 ## 8. Commit Roadmap Update
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-[ -d .jj ] && git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 ```bash
 jj describe -m "docs(roadmap): add gap closure phases {N}-{M}"
 jj new

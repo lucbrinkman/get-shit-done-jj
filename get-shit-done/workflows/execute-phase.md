@@ -55,17 +55,6 @@ Options:
 
 **If .planning/ doesn't exist:** Error - project not initialized.
 
-**Load planning config:**
-
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in jj operations.
-
 **Load jj bookmark config:**
 
 ```bash
@@ -579,17 +568,6 @@ Update ROADMAP.md to reflect phase completion:
 # Update status
 ```
 
-**Check planning config:**
-
-If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all jj operations for .planning/ files
-- Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (commit_docs: false)"
-- Proceed to offer_next step
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with jj operations below
-
 Commit phase completion (roadmap, state, verification):
 ```bash
 jj describe -m "docs(phase-{X}): complete phase execution" && jj new
@@ -641,7 +619,7 @@ No polling (Task blocks). No context bleed.
 - Or skip dependent plans entirely
 
 **All agents in wave fail:**
-- Something systemic (git issues, permissions, etc.)
+- Something systemic (jj issues, permissions, etc.)
 - Stop execution
 - Report for manual investigation
 

@@ -393,17 +393,6 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 <step name="git_commit">
 Commit phase context:
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 ```bash
 jj describe -m "$(cat <<'EOF'
 docs(${PADDED_PHASE}): capture phase context

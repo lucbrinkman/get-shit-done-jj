@@ -519,7 +519,7 @@ Use `/gsd:settings` to toggle these, or override per-invocation:
 | Setting | Default | What it controls |
 |---------|---------|------------------|
 | `parallelization.enabled` | `true` | Run independent plans simultaneously |
-| `planning.commit_docs` | `true` | Track `.planning/` in version control |
+| `planning.search_gitignored` | `false` | Include `.planning/` in broad rg searches when gitignored |
 
 ### jj Bookmarks
 

@@ -126,17 +126,6 @@ If `.planning/STATE.md` exists:
 <step name="jj_commit">
 Commit the todo and any updated state:
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-[ -d .jj ] || COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Todo saved (not committed - commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 Review changes before committing:
 
 ```bash

@@ -252,17 +252,6 @@ Update any internal references to reflect new numbering.
 <step name="commit">
 Commit the removal:
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-[ -d .jj ] || COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 Review changes before committing:
 
 ```bash

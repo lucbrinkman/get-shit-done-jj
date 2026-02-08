@@ -590,7 +590,7 @@ Check if bookmarks were used and offer options.
 BOOKMARK_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"bookmark_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*:.*"\([^"]*\)"/\1/' || echo "none")
 ```
 
-**If strategy is "none":** Skip to git_tag step.
+**If strategy is "none":** Skip to release_bookmark step.
 
 **For "phase" strategy — find phase bookmarks:**
 
@@ -616,7 +616,7 @@ BOOKMARK_PREFIX=$(echo "$MILESTONE_BOOKMARK_TEMPLATE" | sed 's/{.*//')
 MILESTONE_BOOKMARK=$(jj bookmark list | grep "^${BOOKMARK_PREFIX}" | awk '{print $1}' | head -1)
 ```
 
-**If no bookmarks found:** Skip to git_tag step.
+**If no bookmarks found:** Skip to release_bookmark step.
 
 **If bookmarks exist — present options:**
 
@@ -675,47 +675,22 @@ Unlike git branches, jj bookmarks don't require merging. All changes are already
 
 </step>
 
-<step name="git_tag">
+<step name="release_bookmark">
 
-Create git tag for milestone (jj uses underlying git for tags):
+Create release bookmark for milestone:
 
 ```bash
-# Create tag in git repo (jj stores commits in .git)
-git -C .jj/repo/store/git tag -a v[X.Y] -m "$(cat <<'EOF'
-v[X.Y] [Name]
-
-Delivered: [One sentence]
-
-Key accomplishments:
-- [Item 1]
-- [Item 2]
-- [Item 3]
-
-See .planning/MILESTONES.md for full details.
-EOF
-)" || git tag -a v[X.Y] -m "$(cat <<'EOF'
-v[X.Y] [Name]
-
-Delivered: [One sentence]
-
-Key accomplishments:
-- [Item 1]
-- [Item 2]
-- [Item 3]
-
-See .planning/MILESTONES.md for full details.
-EOF
-)"
+jj bookmark create release/v[X.Y]
 ```
 
-Confirm: "Tagged: v[X.Y]"
+Confirm: "Bookmarked: release/v[X.Y]"
 
-Ask: "Push tag to remote? (y/n)"
+Ask: "Push bookmark to remote? (y/n)"
 
 If yes:
 
 ```bash
-jj git push --tag v[X.Y]
+jj git push -b release/v[X.Y]
 ```
 
 </step>
@@ -723,17 +698,6 @@ jj git push --tag v[X.Y]
 <step name="jj_commit_milestone">
 
 Commit milestone completion including archive files and deletions.
-
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
 
 Review changes and create new change:
 

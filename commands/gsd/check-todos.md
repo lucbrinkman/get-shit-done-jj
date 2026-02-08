@@ -177,17 +177,6 @@ Update STATE.md "### Pending Todos" section if exists.
 <step name="jj_commit">
 If todo was moved to done/, commit the change:
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-[ -d .jj ] || COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations, log "Todo moved (not committed - commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 Review changes before committing:
 
 ```bash

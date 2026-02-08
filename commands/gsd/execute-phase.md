@@ -122,9 +122,7 @@ Phase: $ARGUMENTS
    - Skip if: REQUIREMENTS.md doesn't exist, or phase has no Requirements line
 
 10. **Commit phase completion**
-    Check `COMMIT_PLANNING_DOCS` from config.json (default: true).
-    If false: Skip jj operations for .planning/ files.
-    If true: Review `jj st` to verify only intended planning files changed, then bundle all phase metadata updates:
+    Review `jj st` to verify only intended planning files changed, then bundle all phase metadata updates:
     ```bash
     jj describe -m "docs({phase}): complete {phase-name} phase" && jj new
     ```

@@ -979,13 +979,6 @@ mkdir -p .planning/debug/resolved
 mv .planning/debug/{slug}.md .planning/debug/resolved/
 ```
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
 **Commit the fix:**
 
 Review changes before creating new change:
@@ -993,25 +986,12 @@ Review changes before creating new change:
 jj st
 ```
 
-If `COMMIT_PLANNING_DOCS=true` (default):
 ```bash
 jj describe -m "$(cat <<'EOF'
 fix: {brief description}
 
 Root cause: {root_cause}
 Debug session: .planning/debug/resolved/{slug}.md
-EOF
-)" && jj new
-```
-
-If `COMMIT_PLANNING_DOCS=false`:
-```bash
-# Use jj restore to exclude .planning/ before creating change
-jj restore .planning/
-jj describe -m "$(cat <<'EOF'
-fix: {brief description}
-
-Root cause: {root_cause}
 EOF
 )" && jj new
 ```

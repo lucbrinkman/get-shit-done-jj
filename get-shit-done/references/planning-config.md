@@ -5,7 +5,6 @@ Configuration options for `.planning/` directory behavior.
 <config_schema>
 ```json
 "planning": {
-  "commit_docs": true,
   "search_gitignored": false
 },
 "jj": {
@@ -17,49 +16,11 @@ Configuration options for `.planning/` directory behavior.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `commit_docs` | `true` | Whether to commit planning artifacts to jj |
 | `search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
 | `jj.branching_strategy` | `"none"` | Jj bookmark approach: `"none"`, `"phase"`, or `"milestone"` |
 | `jj.phase_bookmark_template` | `"gsd/phase-{phase}-{slug}"` | Bookmark template for phase strategy |
 | `jj.milestone_bookmark_template` | `"gsd/{milestone}-{slug}"` | Bookmark template for milestone strategy |
 </config_schema>
-
-<commit_docs_behavior>
-
-**When `commit_docs: true` (default):**
-- Planning files committed normally
-- SUMMARY.md, STATE.md, ROADMAP.md tracked in jj
-- Full history of planning decisions preserved
-
-**When `commit_docs: false`:**
-- Skip all `jj describe`/`jj new` for `.planning/` files
-- User must add `.planning/` to `.gitignore`
-- Useful for: OSS contributions, client projects, keeping planning private
-
-**Checking the config:**
-
-```bash
-# Check config.json first
-COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_DOCS=false
-```
-
-**Auto-detection:** If `.planning/` is gitignored, `commit_docs` is automatically `false` regardless of config.json. This prevents errors when users have `.planning/` in `.gitignore`.
-
-**Before committing:** Review `jj st` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications before `jj new`.
-
-**Conditional jj operations:**
-
-```bash
-if [ "$COMMIT_DOCS" = "true" ]; then
-  jj describe -m "docs: update state"
-  jj new
-fi
-```
-
-</commit_docs_behavior>
 
 <search_behavior>
 
@@ -78,20 +39,21 @@ fi
 
 <setup_uncommitted_mode>
 
-To use uncommitted mode:
+To exclude planning docs from version control:
 
-1. **Set config:**
-   ```json
-   "planning": {
-     "commit_docs": false,
-     "search_gitignored": true
-   }
-   ```
-
-2. **Add to .gitignore:**
+1. **Add to .gitignore:**
    ```
    .planning/
    ```
+   JJ respects `.gitignore` natively -- no additional configuration needed.
+
+2. **Set config for search:**
+   ```json
+   "planning": {
+     "search_gitignored": true
+   }
+   ```
+   This ensures broad `rg` searches still find `.planning/` content.
 
 3. **Existing tracked files:** If `.planning/` was previously tracked:
    ```bash

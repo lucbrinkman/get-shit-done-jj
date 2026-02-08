@@ -108,15 +108,6 @@ Keep Accumulated Context section (decisions, blockers) from previous milestone.
 
 Delete MILESTONE-CONTEXT.md if exists (consumed).
 
-Check planning config:
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-If `COMMIT_PLANNING_DOCS=false`: Skip jj operations
-
-If `COMMIT_PLANNING_DOCS=true` (default):
 ```bash
 jj describe -m "docs: start milestone v[X.Y] [Name]" && jj new
 ```
@@ -503,9 +494,6 @@ If "adjust": Return to scoping.
 
 **Commit requirements:**
 
-Check planning config (same pattern as Phase 6).
-
-If committing:
 ```bash
 jj describe -m "$(cat <<'EOF'
 docs: define milestone v[X.Y] requirements
@@ -642,9 +630,6 @@ Use AskUserQuestion:
 
 **Commit roadmap (after approval):**
 
-Check planning config (same pattern as Phase 6).
-
-If committing:
 ```bash
 jj describe -m "$(cat <<'EOF'
 docs: create milestone v[X.Y] roadmap ([N] phases)

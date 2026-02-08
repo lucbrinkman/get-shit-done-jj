@@ -233,17 +233,6 @@ Continue to commit_codebase_map.
 <step name="commit_codebase_map">
 Commit the codebase map:
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip jj operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
 ```bash
 jj describe -m "$(cat <<'EOF'
 docs: map existing codebase

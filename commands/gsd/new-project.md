@@ -59,7 +59,7 @@ This is the most leveraged moment in any project. Deep questioning here means be
 
 3. **Detect existing code (brownfield detection):**
    ```bash
-   CODE_FILES=$(find . -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.java" 2>/dev/null | grep -v node_modules | grep -v .git | head -20)
+   CODE_FILES=$(find . -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.java" 2>/dev/null | grep -v node_modules | grep -v .jj | head -20)
    HAS_PACKAGE=$([ -f package.json ] || [ -f requirements.txt ] || [ -f Cargo.toml ] || [ -f go.mod ] || [ -f Package.swift ] && echo "yes")
    HAS_CODEBASE_MAP=$([ -d .planning/codebase ] && echo "yes")
    ```
@@ -341,7 +341,6 @@ Create `.planning/config.json` with all settings:
   "mode": "yolo|interactive",
   "depth": "quick|standard|comprehensive",
   "parallelization": true|false,
-  "commit_docs": true|false,
   "model_profile": "quality|balanced|budget",
   "workflow": {
     "research": true|false,
@@ -350,13 +349,6 @@ Create `.planning/config.json` with all settings:
   }
 }
 ```
-
-**If commit_docs = No:**
-- Set `commit_docs: false` in config.json
-- Add `.planning/` to `.gitignore` (create if needed)
-
-**If commit_docs = Yes:**
-- No additional gitignore entries needed
 
 **Commit config.json:**
 
