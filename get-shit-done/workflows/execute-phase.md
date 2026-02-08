@@ -279,6 +279,7 @@ Execute each wave in sequence. Autonomous plans within a wave run in parallel.
    @~/.claude/get-shit-done/templates/summary.md
    @~/.claude/get-shit-done/references/checkpoints.md
    @~/.claude/get-shit-done/references/tdd.md
+   @~/.claude/get-shit-done/references/testing.md
    </execution_context>
 
    <context>

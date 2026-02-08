@@ -7,6 +7,7 @@ Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
 @~/.claude/get-shit-done/references/jj-integration.md
+@~/.claude/get-shit-done/references/testing.md
 </required_reading>
 
 <process>
@@ -705,9 +706,9 @@ Apply these rules automatically. Track all deviations for Summary documentation.
 
 **Process:**
 
-1. Fix the bug inline
-2. Add/update tests to prevent regression
-3. Verify fix works
+1. Write a failing test reproducing the bug (unit+1 style — see `references/testing.md`)
+2. Fix the bug inline
+3. Verify test passes
 4. Continue task
 5. Track in deviations list: `[Rule 1 - Bug] [description]`
 
@@ -736,7 +737,7 @@ Apply these rules automatically. Track all deviations for Summary documentation.
 **Process:**
 
 1. Add the missing functionality inline
-2. Add tests for the new functionality
+2. Add tests for the new functionality (unit+1 style — see `references/testing.md`)
 3. Verify it works
 4. Continue task
 5. Track in deviations list: `[Rule 2 - Missing Critical] [description]`

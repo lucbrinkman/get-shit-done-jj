@@ -113,24 +113,12 @@ After completion, create SUMMARY.md with:
 </execution_flow>
 
 <test_quality>
-## Good Tests vs Bad Tests
+## Test Quality and Granularity
 
-**Test behavior, not implementation:**
-- Good: "returns formatted date string"
-- Bad: "calls formatDate helper with correct params"
-- Tests should survive refactors
+**Shared testing guidance (unit+1, mocking, test quality):**
+@~/.claude/get-shit-done/references/testing.md
 
-**One concept per test:**
-- Good: Separate tests for valid input, empty input, malformed input
-- Bad: Single test checking all edge cases with multiple assertions
-
-**Descriptive names:**
-- Good: "should reject empty email", "returns null for invalid ID"
-- Bad: "test1", "handles error", "works correctly"
-
-**No implementation details:**
-- Good: Test public API, observable behavior
-- Bad: Mock internals, test private methods, assert on internal state
+All TDD tests should follow unit+1 style: use direct dependencies, mock at the slow/external boundary.
 </test_quality>
 
 <framework_setup>
