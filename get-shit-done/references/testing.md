@@ -7,7 +7,7 @@ Shared testing guidance for all GSD execution contexts — TDD plans, standard p
 <test_granularity>
 ## Test Granularity: Unit+1 Style
 
-Prefer **unit+1 tests** over pure unit tests or full integration tests.
+Prefer **unit+1 tests** (also known as **shallow integration tests**) over pure unit tests or full integration tests.
 
 | Level | What it means | Example |
 |-------|---------------|---------|
@@ -20,6 +20,8 @@ Prefer **unit+1 tests** over pure unit tests or full integration tests.
 - Still fast (mocks cut off slow/external things)
 - Catches integration bugs that pure unit tests miss
 - More maintainable than mocking every direct dependency
+
+**How deep is "+1"?** There's no fixed rule. The boundary depends on the situation — what's slow, what's external, and what interactions matter for the behavior you're testing. A unit+1 test for a service with a database is different from a unit+1 test for a parser with a formatter. Use judgment: go deep enough to test real interactions, shallow enough to stay fast.
 
 **The heuristic:** Mock at the slow/external boundary, not at your code's direct dependencies.
 
