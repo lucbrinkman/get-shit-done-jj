@@ -95,6 +95,8 @@ No user permission needed for Rules 1-3.
 
 **Examples:** Wrong queries, logic errors, type errors, null pointer exceptions, broken validation, security vulnerabilities, race conditions, memory leaks
 
+**Process:** Write a failing test that reproduces the bug (unit+1 style) → verify it fails with assertion error → fix the bug → verify test passes → continue → track `[Rule 1 - Bug]` ends
+
 ---
 
 **RULE 2: Auto-add missing critical functionality**
@@ -103,7 +105,9 @@ No user permission needed for Rules 1-3.
 
 **Examples:** Missing error handling, no input validation, missing null checks, no auth on protected routes, missing authorization, no CSRF/CORS, no rate limiting, missing DB indexes, no error logging
 
-**Critical = required for correct/secure/performant operation.** These aren't "features" — they're correctness requirements.
+**Process:** Write a failing test describing expected behavior (unit+1 style) → verify it fails with assertion error → add the functionality → verify test passes → continue → track `[Rule 2 - Missing Critical]`
+
+**Critical = required for correct/secure/performant operation.** These aren't "features" -- they're correctness requirements. ends
 
 ---
 
