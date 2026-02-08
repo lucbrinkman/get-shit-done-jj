@@ -114,6 +114,7 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
        @~/.claude/get-shit-done/templates/summary.md
        @~/.claude/get-shit-done/references/checkpoints.md
        @~/.claude/get-shit-done/references/tdd.md
+       @~/.claude/get-shit-done/references/testing.md
        </execution_context>
 
        <files_to_read>
@@ -139,10 +140,10 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
 
    For each SUMMARY.md:
    - Verify first 2 files from `key-files.created` exist on disk
-   - Check `jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep "{phase}-{plan}"` returns ≥1 commit
+   - Check `jj log --no-graph -T 'commit_id.short(7) ++ " " ++ description.first_line() ++ "\n"' | grep "{phase}-{plan}"` returns >=1 commit
    - Check for `## Self-Check: FAILED` marker
 
-   If ANY spot-check fails: report which plan failed, route to failure handler — ask "Retry plan?" or "Continue with remaining waves?"
+   If ANY spot-check fails: report which plan failed, route to failure handler -- ask "Retry plan?" or "Continue with remaining waves?"
 
    If pass:
    ```

@@ -7,6 +7,7 @@ Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
 @~/.claude/get-shit-done/references/jj-integration.md
+@~/.claude/get-shit-done/references/testing.md
 </required_reading>
 
 <process>
@@ -176,8 +177,8 @@ You WILL discover unplanned work. Apply automatically, track all for Summary.
 
 | Rule | Trigger | Action | Permission |
 |------|---------|--------|------------|
-| **1: Bug** | Broken behavior, errors, wrong queries, type errors, security vulns, race conditions, leaks | Fix → test → verify → track `[Rule 1 - Bug]` | Auto |
-| **2: Missing Critical** | Missing essentials: error handling, validation, auth, CSRF/CORS, rate limiting, indexes, logging | Add → test → verify → track `[Rule 2 - Missing Critical]` | Auto |
+| **1: Bug** | Broken behavior, errors, wrong queries, type errors, security vulns, race conditions, leaks | Write failing test first (unit+1 style -- see `references/testing.md`) → fix → verify test passes → track `[Rule 1 - Bug]` | Auto |
+| **2: Missing Critical** | Missing essentials: error handling, validation, auth, CSRF/CORS, rate limiting, indexes, logging | Add → test (unit+1 style -- see `references/testing.md`) → verify → track `[Rule 2 - Missing Critical]` | Auto |
 | **3: Blocking** | Prevents completion: missing deps, wrong types, broken imports, missing env/config/files, circular deps | Fix blocker → verify proceeds → track `[Rule 3 - Blocking]` | Auto |
 | **4: Architectural** | Structural change: new DB table, schema change, new service, switching libs, breaking API, new infra | STOP → present decision (below) → track `[Rule 4 - Architectural]` | Ask user |
 
