@@ -5,7 +5,6 @@ Configuration options for `.planning/` directory behavior.
 <config_schema>
 ```json
 "planning": {
-  "commit_docs": true,
   "search_gitignored": false
 },
 "jj": {
@@ -17,53 +16,11 @@ Configuration options for `.planning/` directory behavior.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `commit_docs` | `true` | Whether to commit planning artifacts to jj |
 | `search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
 | `jj.branching_strategy` | `"none"` | Jj bookmark approach: `"none"`, `"phase"`, or `"milestone"` |
 | `jj.phase_bookmark_template` | `"gsd/phase-{phase}-{slug}"` | Bookmark template for phase strategy |
 | `jj.milestone_bookmark_template` | `"gsd/{milestone}-{slug}"` | Bookmark template for milestone strategy |
 </config_schema>
-
-<commit_docs_behavior>
-
-**When `commit_docs: true` (default):**
-- Planning files committed normally
-- SUMMARY.md, STATE.md, ROADMAP.md tracked in jj
-- Full history of planning decisions preserved
-
-**When `commit_docs: false`:**
-- Skip all `jj describe`/`jj new` for `.planning/` files
-- User must add `.planning/` to `.gitignore`
-- Useful for: OSS contributions, client projects, keeping planning private
-
-**Using gsd-tools.js (preferred):**
-
-```bash
-# Commit with automatic commit_docs + gitignore checks:
-node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs: update state" --files .planning/STATE.md
-
-# Load config via state load (returns JSON):
-INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js state load)
-# commit_docs is available in the JSON output
-
-# Or use init commands which include commit_docs:
-INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js init execute-phase "1")
-# commit_docs is included in all init command outputs
-```
-
-**Auto-detection:** If `.planning/` is gitignored, `commit_docs` is automatically `false` regardless of config.json. This prevents errors when users have `.planning/` in `.gitignore`.
-
-**Before committing:** Review `jj st` to verify only intended files changed. Use `jj restore <file>` to undo accidental modifications before `jj new`.
-
-**Commit via CLI (handles checks automatically):**
-
-```bash
-node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs: update state" --files .planning/STATE.md
-```
-
-The CLI checks `commit_docs` config and gitignore status internally — no manual conditionals needed.
-
-</commit_docs_behavior>
 
 <search_behavior>
 
@@ -82,20 +39,21 @@ The CLI checks `commit_docs` config and gitignore status internally — no manua
 
 <setup_uncommitted_mode>
 
-To use uncommitted mode:
+To exclude planning docs from version control:
 
-1. **Set config:**
-   ```json
-   "planning": {
-     "commit_docs": false,
-     "search_gitignored": true
-   }
-   ```
-
-2. **Add to .gitignore:**
+1. **Add to .gitignore:**
    ```
    .planning/
    ```
+   JJ respects `.gitignore` natively -- no additional configuration needed.
+
+2. **Set config for search:**
+   ```json
+   "planning": {
+     "search_gitignored": true
+   }
+   ```
+   This ensures broad `rg` searches still find `.planning/` content.
 
 3. **Existing tracked files:** If `.planning/` was previously tracked:
    ```bash

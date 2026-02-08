@@ -13,7 +13,7 @@ allowed-tools:
 Mark milestone {{version}} complete, archive to milestones/, and update ROADMAP.md and REQUIREMENTS.md.
 
 Purpose: Create historical record of shipped version, archive milestone artifacts (roadmap + requirements), and prepare for next milestone.
-Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tagged.
+Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, release bookmarked.
 </objective>
 
 <execution_context>
@@ -105,7 +105,7 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
    - Review `jj st` before committing
    - Commit: `chore: archive v{{version}} milestone`
    - Create new change: `jj new`
-   - Note: Tagging in jj is not yet implemented; use git tagging after `jj git push` if needed
+   - Create release bookmark: `jj bookmark create release/v{{version}}`
 
 8. **Offer next steps:**
    - `/gsd:new-milestone` — start next milestone (questioning → research → requirements → roadmap)
