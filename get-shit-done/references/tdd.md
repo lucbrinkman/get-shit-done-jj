@@ -115,10 +115,42 @@ After completion, create SUMMARY.md with:
 <test_quality>
 ## Test Quality and Granularity
 
-**Shared testing guidance (unit+1, mocking, test quality):**
-@~/.claude/get-shit-done/references/testing.md
+### Unit+1 Style
 
-All TDD tests should follow unit+1 style: use direct dependencies, mock at the slow/external boundary.
+Prefer **unit+1 tests** over pure unit tests or full integration tests.
+
+| Level | What it means | Example |
+|-------|---------------|---------|
+| **Unit** | Mock direct dependencies | Mock the database in a Django test |
+| **Unit+1** (preferred) | Use direct dependencies, mock what's slow/external | Call User.create() with real DB, mock 2FA service |
+| **Full integration** | Real everything | Hit actual 2FA service |
+
+**Why unit+1:**
+- Tests real interactions between your code and its immediate dependencies
+- Still fast (mocks cut off slow/external things)
+- Catches integration bugs that pure unit tests miss
+- More maintainable than mocking every direct dependency
+
+**Mock at the slow/external boundary, not at your code's direct dependencies.**
+
+**What to mock (slow/external):** Network calls, third-party services, file I/O, timers, non-deterministic operations.
+**What to use real (direct dependencies):** Your own modules, database queries (test DB), framework utilities, validation logic.
+
+### Test Quality
+
+**Test behavior, not implementation:**
+- Good: "returns formatted date string"
+- Bad: "calls formatDate helper with correct params"
+
+**One concept per test.**
+**Descriptive names:** "should reject empty email", not "test1".
+**No implementation details:** Test public API, not private methods or internal state.
+
+### Mocking Boundaries
+
+When creating mock responses, mirror the **complete** real data structure, not just the fields your immediate test uses. Downstream code may depend on fields you omitted.
+
+If mock setup is longer than test logic, you're mocking at the wrong level. Mock further from your code, at the slow/external boundary.
 </test_quality>
 
 <framework_setup>
