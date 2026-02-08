@@ -294,6 +294,76 @@ issue:
   fix_hint: "Remove search task - belongs in future phase per user decision"
 ```
 
+## Dimension 8: Testing Strategy
+
+**Question:** Does the testing approach match the features being built?
+
+**Principle:** Bias toward TDD. Features with testable behavior should use TDD unless there's a clear reason not to. The cost of under-testing is higher than the cost of over-testing.
+
+**Process:**
+1. For each plan, check `type` field (`execute` vs `tdd`)
+2. For each `type: execute` plan, scan tasks for features with testable behavior
+3. Flag features that should be TDD candidates but aren't
+4. For each `type: tdd` plan, verify the feature genuinely benefits from TDD
+5. Check that testing boundaries are appropriate (unit vs integration level)
+
+**TDD candidates that SHOULD have dedicated TDD plans:**
+- Business logic with defined inputs/outputs
+- API endpoints with request/response contracts
+- Data transformations, parsing, formatting
+- Validation rules and constraints
+- Algorithms with testable behavior
+- State machines and workflows
+- Any function describable as `expect(fn(input)).toBe(output)`
+
+**Acceptable as standard tasks (no TDD plan needed):**
+- UI layout and styling (no testable behavior)
+- Configuration file changes
+- Glue code connecting existing tested components
+- One-off scripts and migrations
+- Simple CRUD with no business logic beyond the framework
+
+**Red flags:**
+- Feature with clear input/output behavior in a standard plan without tests
+- Business logic (validation, transformation, calculation) not covered by TDD
+- API endpoint with no test plan for its contract
+- TDD plan for something with no testable behavior (pure UI styling)
+- Phase has zero TDD plans despite having features with testable behavior
+
+**Example issue — missing TDD:**
+```yaml
+issue:
+  dimension: testing_strategy
+  severity: warning
+  description: "Email validation logic in Plan 01 Task 2 is a TDD candidate but uses standard task"
+  plan: "01"
+  task: 2
+  evidence: "Action describes validation rules (format, uniqueness, domain check) — clear input/output behavior"
+  fix_hint: "Extract email validation into dedicated TDD plan, or add tdd='true' attribute to task"
+```
+
+**Example issue — unnecessary TDD:**
+```yaml
+issue:
+  dimension: testing_strategy
+  severity: info
+  description: "TDD plan 03 targets Tailwind styling with no testable behavior"
+  plan: "03"
+  evidence: "Feature is purely visual layout — no function with input/output to test"
+  fix_hint: "Convert to standard plan with type: execute"
+```
+
+**Example issue — no testing in phase:**
+```yaml
+issue:
+  dimension: testing_strategy
+  severity: warning
+  description: "Phase has 4 plans with business logic but zero TDD plans"
+  plans: ["01", "02", "03", "04"]
+  evidence: "Plans include: auth flow, permission checks, data validation, API contracts"
+  fix_hint: "Identify top 2-3 features with clearest input/output behavior and create TDD plans"
+```
+
 </verification_dimensions>
 
 <verification_process>
@@ -476,6 +546,27 @@ Check that must_haves are properly derived from phase goal.
 - Connect artifacts that must work together
 - Specify the connection method (fetch, Prisma query, import)
 - Cover critical wiring (where stubs hide)
+
+## Step 9.5: Evaluate Testing Strategy
+
+Check that the testing approach matches the features being built. Bias toward TDD.
+
+**For each plan:**
+1. Read `type` field from frontmatter
+2. If `type: execute` — scan task actions for testable behavior:
+   - Does any task describe validation, transformation, or business rules?
+   - Does any task create API endpoints with request/response contracts?
+   - Does any task implement algorithms or state logic?
+3. If testable behavior found in standard plan → flag as warning
+4. If `type: tdd` — verify feature has genuine input/output behavior
+
+**Build testing summary for structured return:**
+```
+Testing Strategy:
+- TDD plans: [list with features]
+- Standard plans: [list with reasons why TDD not needed]
+- Flagged: [any questionable decisions]
+```
 
 ## Step 10: Determine Overall Status
 
@@ -719,6 +810,16 @@ When all checks pass:
 | 01   | 3     | 5     | 1    | Valid  |
 | 02   | 2     | 4     | 2    | Valid  |
 
+### Testing Strategy
+
+| Plan | Type | Testing Rationale |
+|------|------|-------------------|
+| 01   | tdd  | Email validation — clear input/output behavior |
+| 02   | execute | UI layout — no testable behavior |
+| 03   | tdd  | API auth flow — request/response contract |
+
+**TDD coverage:** {N}/{M} plans with testable behavior use TDD
+
 ### Ready for Execution
 
 Plans verified. Run `/gsd:execute-phase {phase}` to proceed.
@@ -751,6 +852,15 @@ When issues need fixing:
 **1. [{dimension}] {description}**
 - Plan: {plan}
 - Fix: {fix_hint}
+
+### Testing Strategy
+
+| Plan | Type | Testing Rationale |
+|------|------|-------------------|
+| 01   | tdd  | Email validation — clear input/output behavior |
+| 02   | execute | UI layout — no testable behavior |
+
+**TDD coverage:** {N}/{M} plans with testable behavior use TDD
 
 ### Structured Issues
 
@@ -805,6 +915,11 @@ Plan verification complete when:
   - [ ] Locked decisions have implementing tasks
   - [ ] No tasks contradict locked decisions
   - [ ] Deferred ideas not included in plans
+- [ ] Testing strategy evaluated:
+  - [ ] Features with testable behavior have TDD plans (bias toward TDD)
+  - [ ] Standard plans justified (no testable behavior, pure UI/config/glue)
+  - [ ] Phase has appropriate TDD coverage for its domain
+  - [ ] Testing summary included in structured return
 - [ ] Overall status determined (passed | issues_found)
 - [ ] Structured issues returned (if any found)
 - [ ] Result returned to orchestrator

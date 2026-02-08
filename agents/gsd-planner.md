@@ -186,10 +186,11 @@ Tasks must be specific enough for clean execution. Compare:
 
 ## TDD Detection Heuristic
 
-For each potential task, evaluate TDD fit:
+For each potential task, evaluate TDD fit. **Bias toward TDD** — the cost of under-testing is higher than the cost of over-testing. When in doubt, use TDD.
 
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
+**Heuristic:** Can you describe the behavior as `expect(fn(input)).toBe(output)` before writing `fn`?
 - Yes: Create a dedicated TDD plan for this feature
+- Probably: Default to TDD — it forces cleaner interfaces
 - No: Standard task in standard plan
 
 **TDD candidates (create dedicated TDD plans):**
@@ -199,13 +200,17 @@ For each potential task, evaluate TDD fit:
 - Validation rules and constraints
 - Algorithms with testable behavior
 - State machines and workflows
+- Any code with conditional logic that affects user-visible behavior
+- Error handling paths (what happens on invalid input?)
 
-**Standard tasks (remain in standard plans):**
-- UI layout, styling, visual components
-- Configuration changes
-- Glue code connecting existing components
+**Standard tasks (remain in standard plans) — only when there is genuinely no testable behavior:**
+- UI layout, styling, visual components (purely visual, no logic)
+- Configuration file changes
+- Glue code connecting existing *tested* components
 - One-off scripts and migrations
-- Simple CRUD with no business logic
+- Simple CRUD with no business logic beyond the framework
+
+**The bar for skipping TDD:** You must be able to articulate why there is no testable behavior. "It's simple" is not sufficient — simple logic still has input/output contracts. "It's purely visual" or "it's framework-provided CRUD with no custom logic" are valid reasons.
 
 **Why TDD gets its own plan:** TDD requires 2-3 execution cycles (RED -> GREEN -> REFACTOR), consuming 40-50% context for a single feature. Embedding in multi-task plans degrades quality.
 
@@ -719,23 +724,26 @@ Why bad: Verification fatigue. Combine into one checkpoint at end.
 
 ## When TDD Improves Quality
 
-TDD is about design quality, not coverage metrics. The red-green-refactor cycle forces thinking about behavior before implementation.
+TDD is about design quality, not coverage metrics. The red-green-refactor cycle forces thinking about behavior before implementation. **Bias toward TDD** — when in doubt, use it.
 
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
+**Heuristic:** Can you describe the behavior as `expect(fn(input)).toBe(output)` before writing `fn`?
+- Yes → TDD plan. Probably → default to TDD. No → standard plan.
 
-**TDD candidates:**
+**TDD candidates (default to TDD):**
 - Business logic with defined inputs/outputs
 - API endpoints with request/response contracts
 - Data transformations, parsing, formatting
 - Validation rules and constraints
 - Algorithms with testable behavior
+- Any code with conditional logic affecting user-visible behavior
+- Error handling paths
 
-**Skip TDD:**
-- UI layout and styling
-- Configuration changes
-- Glue code connecting existing components
+**Skip TDD (only when genuinely no testable behavior):**
+- Purely visual UI layout and styling
+- Configuration file changes
+- Glue code connecting existing *tested* components
 - One-off scripts
-- Simple CRUD with no business logic
+- Simple CRUD with no business logic beyond the framework
 
 ## TDD Plan Structure
 
@@ -1105,7 +1113,7 @@ For each potential task:
 2. What does this task CREATE? (files, types, APIs others might need)
 3. Can this run independently? (no dependencies = Wave 1 candidate)
 
-Apply TDD detection heuristic. Apply user setup detection.
+Apply TDD detection heuristic (bias toward TDD — justify skipping, not using). Apply user setup detection.
 </step>
 
 <step name="build_dependency_graph">
@@ -1251,6 +1259,17 @@ Return structured planning outcome to orchestrator.
 |------|-----------|-------|-------|
 | {phase}-01 | [brief] | 2 | [files] |
 | {phase}-02 | [brief] | 3 | [files] |
+
+### Testing Strategy
+
+| Plan | Type | Rationale |
+|------|------|-----------|
+| {phase}-01 | tdd | [Why TDD: testable behavior description] |
+| {phase}-02 | execute | [Why standard: no testable behavior — purely visual/config/glue] |
+| {phase}-03 | tdd | [Why TDD: testable behavior description] |
+
+**TDD coverage:** {X}/{Y} plans use TDD
+**Skipped TDD:** {list plans that skip TDD with one-line justification each}
 
 ### Next Steps
 

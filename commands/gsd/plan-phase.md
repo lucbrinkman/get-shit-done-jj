@@ -351,9 +351,9 @@ Parse planner output:
 
 **`## PLANNING COMPLETE`:**
 - Display: `Planner created {N} plan(s). Files on disk.`
-- If `--skip-verify`: Skip to step 13
+- If `--skip-verify`: Skip to step 14 (final status, skipping both checker and testing review)
 - Check config: `WORKFLOW_PLAN_CHECK=$(cat .planning/config.json 2>/dev/null | grep -o '"plan_check"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")`
-- If `workflow.plan_check` is `false`: Skip to step 13
+- If `workflow.plan_check` is `false`: Skip to step 14 (final status)
 - Otherwise: Proceed to step 10
 
 **`## CHECKPOINT REACHED`:**
@@ -432,7 +432,7 @@ Task(
 
 **If `## VERIFICATION PASSED`:**
 - Display: `Plans verified. Ready for execution.`
-- Proceed to step 13
+- Proceed to step 13 (testing strategy review)
 
 **If `## ISSUES FOUND`:**
 - Display: `Checker found issues:`
@@ -509,7 +509,85 @@ Offer options:
 
 Wait for user response.
 
-## 13. Present Final Status
+## 13. User Review: Testing Strategy
+
+After the planner↔checker loop settles, present the testing strategy for user approval. This is a lightweight review — not a form, just a summary and a plain text response.
+
+**Extract testing strategy from checker output:**
+
+The checker's structured return (both VERIFICATION PASSED and ISSUES FOUND) includes a `### Testing Strategy` table. Extract it.
+
+**Present to user:**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► TESTING STRATEGY REVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase {X}: {Name}
+
+| Plan | Type | Rationale |
+|------|------|-----------|
+| {phase}-01 | tdd | [why] |
+| {phase}-02 | execute | [why] |
+| {phase}-03 | tdd | [why] |
+
+TDD coverage: {N}/{M} plans
+
+───────────────────────────────────────────────────────────────
+
+Does this testing approach look right?
+
+→ Type "approve" to proceed, or describe what you'd change
+───────────────────────────────────────────────────────────────
+```
+
+**Wait for plain text response.**
+
+**If user approves** ("approve", "yes", "looks good", "ok", "fine", "lgtm"):
+- Proceed to step 14
+
+**If user requests changes:**
+- Parse their feedback (e.g., "Plan 02 should use TDD too" or "skip TDD for plan 03")
+- Spawn gsd-planner in revision mode with testing-specific feedback:
+
+```markdown
+<revision_context>
+
+**Phase:** {phase_number}
+**Mode:** revision
+
+**Existing plans:**
+{plans_content}
+
+**User testing feedback:**
+{verbatim user response}
+
+</revision_context>
+
+<instructions>
+The user reviewed the testing strategy and wants changes.
+Adjust plan types (tdd vs execute) and task structure based on their feedback.
+This is a testing strategy revision — focus on TDD decisions, not other plan aspects.
+</instructions>
+```
+
+```
+Task(
+  prompt="First, read ~/.claude/agents/gsd-planner.md for your role and instructions.\n\n" + revision_prompt,
+  subagent_type="general-purpose",
+  model="{planner_model}",
+  description="Revise Phase {phase} testing strategy"
+)
+```
+
+After planner returns → run checker once more (step 10) to validate, then re-present testing strategy to user.
+
+**Skip this step if:**
+- `--skip-verify` flag was set (user opted out of all verification)
+- Phase has zero TDD-eligible features (checker confirms all plans are correctly standard)
+
+## 14. Present Final Status
 
 Route to `<offer_next>`.
 
@@ -531,6 +609,7 @@ Output this markdown directly (not as a code block):
 
 Research: {Completed | Used existing | Skipped}
 Verification: {Passed | Passed with override | Skipped}
+Testing strategy: {Approved by user | Revised per user feedback | Skipped}
 
 ───────────────────────────────────────────────────────────────
 
@@ -563,6 +642,8 @@ Verification: {Passed | Passed with override | Skipped}
 - [ ] Plans created (PLANNING COMPLETE or CHECKPOINT handled)
 - [ ] gsd-plan-checker spawned with CONTEXT.md (verifies context compliance)
 - [ ] Verification passed OR user override OR max iterations with user decision
+- [ ] Testing strategy presented to user for review (unless --skip-verify)
+- [ ] User approved testing strategy OR planner revised per user feedback
 - [ ] User sees status between agent spawns
 - [ ] User knows next steps (execute or review)
 </success_criteria>
