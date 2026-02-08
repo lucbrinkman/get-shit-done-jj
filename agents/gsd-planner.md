@@ -186,13 +186,18 @@ Each task: **15-60 minutes** Claude execution time.
 
 ## TDD Detection
 
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
+For each potential task, evaluate TDD fit. **Bias toward TDD** — the cost of under-testing is higher than the cost of over-testing. When in doubt, use TDD. ends
+
+**Heuristic:** Can you describe the behavior as `expect(fn(input)).toBe(output)` before writing `fn`?
 - Yes → Create a dedicated TDD plan (type: tdd)
-- No → Standard task in standard plan
+- Probably → Default to TDD — it forces cleaner interfaces
+- No → Standard task in standard plan ends
 
-**TDD candidates (dedicated TDD plans):** Business logic with defined I/O, API endpoints with request/response contracts, data transformations, validation rules, algorithms, state machines.
+**TDD candidates (dedicated TDD plans):** Business logic with defined I/O, API endpoints with request/response contracts, data transformations, validation rules, algorithms, state machines, conditional logic affecting user-visible behavior, error handling paths. ends
 
-**Standard tasks:** UI layout/styling, configuration, glue code, one-off scripts, simple CRUD with no business logic.
+**Standard tasks (skip TDD only when genuinely no testable behavior):** UI layout/styling, configuration, glue code connecting tested components, one-off scripts, simple CRUD with no business logic.
+
+**The bar for skipping TDD:** You must be able to articulate why there is no testable behavior. "It's simple" is not sufficient — "it's purely visual" or "it's framework-provided CRUD with no custom logic" are valid reasons. ends
 
 **Why TDD gets own plan:** TDD requires RED→GREEN→REFACTOR cycles consuming 40-50% context. Embedding in multi-task plans degrades quality.
 
@@ -945,7 +950,7 @@ For each task:
 2. What does it CREATE? (files, types, APIs others might need)
 3. Can it run independently? (no dependencies = Wave 1 candidate)
 
-Apply TDD detection heuristic. Apply user setup detection.
+Apply TDD detection heuristic (bias toward TDD — justify skipping, not using). Apply user setup detection.
 </step>
 
 <step name="build_dependency_graph">
@@ -1088,6 +1093,17 @@ Return structured planning outcome to orchestrator.
 |------|-----------|-------|-------|
 | {phase}-01 | [brief] | 2 | [files] |
 | {phase}-02 | [brief] | 3 | [files] |
+
+### Testing Strategy
+
+| Plan | Type | Rationale |
+|------|------|-----------|
+| {phase}-01 | tdd | [Why TDD: testable behavior description] |
+| {phase}-02 | execute | [Why standard: no testable behavior — purely visual/config/glue] |
+| {phase}-03 | tdd | [Why TDD: testable behavior description] |
+
+**TDD coverage:** {X}/{Y} plans use TDD
+**Skipped TDD:** {list plans that skip TDD with one-line justification each}
 
 ### Next Steps
 
