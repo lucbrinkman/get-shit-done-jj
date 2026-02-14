@@ -196,7 +196,7 @@ node ~/.claude/get-shit-done/bin/gsd-tools.js commit "docs(quick-${next_num}): $
 
 Get final commit hash:
 ```bash
-commit_hash=$(git rev-parse --short HEAD)
+commit_hash=$(jj log -r @- -T 'commit_id.short(7)' --no-graph)
 ```
 
 Display completion output:

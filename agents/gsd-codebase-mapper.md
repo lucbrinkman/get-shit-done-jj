@@ -732,7 +732,7 @@ Ready for orchestrator summary.
 - NEVER quote their contents, even partially
 - NEVER include values like `API_KEY=...` or `sk-...` in any output
 
-**Why this matters:** Your output gets committed to git. Leaked secrets = security incident.
+**Why this matters:** Your output gets committed and tracked. Leaked secrets = security incident.
 </forbidden_files>
 
 <critical_rules>

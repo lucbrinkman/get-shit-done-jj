@@ -43,13 +43,13 @@ The document should describe what you want to build.
 INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js init new-project)
 ```
 
-Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_git`.
+Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_jj`.
 
 **If `project_exists` is true:** Error — project already initialized. Use `/gsd:progress`.
 
-**If `has_git` is false:** Initialize git:
+**If `has_jj` is false:** Initialize jj:
 ```bash
-git init
+jj git init --colocate
 ```
 
 ## 2. Brownfield Offer

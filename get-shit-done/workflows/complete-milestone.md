@@ -505,9 +505,9 @@ fi
 
 </step>
 
-<step name="git_tag">
+<step name="create_bookmark">
 
-Create git tag:
+Create release bookmark:
 
 ```bash
 jj bookmark create v[X.Y]
@@ -545,7 +545,7 @@ Archived:
 - milestones/v[X.Y]-REQUIREMENTS.md
 
 Summary: .planning/MILESTONES.md
-Tag: v[X.Y]
+Bookmark: v[X.Y]
 
 ---
 

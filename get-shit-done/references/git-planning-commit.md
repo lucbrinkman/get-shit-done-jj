@@ -35,4 +35,4 @@ node ~/.claude/get-shit-done/bin/gsd-tools.js commit "" --files .planning/codeba
 
 - `commit_docs: false` in config
 - `.planning/` is gitignored
-- No changes to commit (check with `git status --porcelain .planning/`)
+- No changes to commit (check with `jj st`)

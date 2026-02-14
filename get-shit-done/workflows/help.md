@@ -1,5 +1,5 @@
 <purpose>
-Display the complete GSD command reference. Output ONLY the reference content. Do NOT add project-specific analysis, git status, next-step suggestions, or any commentary beyond the reference.
+Display the complete GSD command reference. Output ONLY the reference content. Do NOT add project-specific analysis, status checks, next-step suggestions, or any commentary beyond the reference.
 </purpose>
 
 <reference>
@@ -177,7 +177,7 @@ Archive completed milestone and prepare for next version.
 
 - Creates MILESTONES.md entry with stats
 - Archives full details to milestones/ directory
-- Creates git tag for the release
+- Creates bookmark for the release
 - Prepares workspace for next version
 
 Usage: `/gsd:complete-milestone 1.0.0`
@@ -387,7 +387,7 @@ Change anytime by editing `.planning/config.json`
 Configure how planning artifacts are managed in `.planning/config.json`:
 
 **`planning.commit_docs`** (default: `true`)
-- `true`: Planning artifacts committed to git (standard workflow)
+- `true`: Planning artifacts committed (standard workflow)
 - `false`: Planning artifacts kept local-only, not committed
 
 When `commit_docs: false`:

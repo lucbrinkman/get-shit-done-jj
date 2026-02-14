@@ -75,7 +75,7 @@ AskUserQuestion([
     ]
   },
   {
-    question: "Git branching strategy?",
+    question: "Bookmark management strategy?",
     header: "Branching",
     multiSelect: false,
     options: [
@@ -139,7 +139,7 @@ Quick commands:
 
 <success_criteria>
 - [ ] Current config read
-- [ ] User presented with 5 settings (profile + 3 workflow toggles + git branching)
-- [ ] Config updated with model_profile, workflow, and git sections
+- [ ] User presented with 5 settings (profile + 3 workflow toggles + jj bookmarks)
+- [ ] Config updated with model_profile, workflow, and jj sections
 - [ ] Changes confirmed to user
 </success_criteria>
